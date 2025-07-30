@@ -126,7 +126,6 @@ resource "harness_chaos_image_registry" "org_level" {
   registry_server = var.registry_server
   registry_account = var.registry_account
 
-  // Authentication
   is_default = var.is_default_registry
   is_override_allowed = var.is_override_allowed
   is_private = var.is_private_registry
@@ -143,8 +142,6 @@ resource "harness_chaos_image_registry" "org_level" {
       ddcr_fault  = var.ddcr_fault_image != "" ? var.ddcr_fault_image : null
     }
   }
-
-  // tags = local.common_tags
 }
 
 // 7. Setup Chaos Image Registry at Project Level (if private registry)
@@ -179,8 +176,6 @@ resource "harness_chaos_image_registry" "project_level" {
       ddcr_fault  = var.ddcr_fault_image != "" ? var.ddcr_fault_image : null
     }
   }
-
-  // tags = local.common_tags
 }
 
 // 8. Create Chaos Infrastructure V2
@@ -264,7 +259,7 @@ resource "harness_platform_connector_git" "chaos_hub" {
       http {
         username       = var.git_connector_username != "" ? var.git_connector_username : null
         password_ref   = var.git_connector_password != "" ? var.git_connector_password : null
-        
+
         // For GitHub apps
         dynamic "github_app" {
           for_each = var.github_app_id != "" ? [1] : []
@@ -312,7 +307,7 @@ resource "harness_chaos_hub" "this" {
   connector_scope = var.chaos_hub_connector_scope
 
   tags = var.chaos_hub_tags
-  
+
   // Add common tags to the resource
   lifecycle {
     ignore_changes = [
@@ -359,7 +354,7 @@ resource "harness_chaos_security_governance_condition" "this" {
         operator  = var.security_governance_condition_infra_operator
         infra_ids = ["${harness_platform_environment.this.id}/${harness_chaos_infrastructure_v2.this.id}"]
       }
-      
+
       // Application specification (optional)
       dynamic "application_spec" {
         for_each = var.security_governance_condition_application_spec != null ? [1] : []
@@ -375,7 +370,7 @@ resource "harness_chaos_security_governance_condition" "this" {
           }
         }
       }
-      
+
       // Chaos service account specification (optional)
       dynamic "chaos_service_account_spec" {
         for_each = var.security_governance_condition_service_account_spec != null ? [1] : []
@@ -402,7 +397,7 @@ resource "harness_chaos_security_governance_condition" "this" {
   lifecycle {
     ignore_changes = [name]
   }
-  
+
   # Convert merged tags to list of strings format
   tags = [
     for k, v in merge(
