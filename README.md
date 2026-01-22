@@ -89,7 +89,7 @@ terraform apply
 
 ### Required Variables
 - `harness_platform_api_key`: Your Harness API key with appropriate permissions
-- `harness_platform_account_id`: Your Harness account ID
+- `harness_account_id`: Your Harness account ID
 
 ### Common Variables
 - `org_name`: Name of the organization to create

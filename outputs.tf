@@ -57,3 +57,18 @@ output "security_governance_rule_id" {
   description = "The ID of the Security Governance Rule"
   value       = harness_chaos_security_governance_rule.this.id
 }
+
+output "chaos_hub_v2_account_level_id" {
+  description = "The ID of the Chaos Hub V2 Account Level"
+  value       = var.create_chaos_hub_v2_account_level ? harness_chaos_hub_v2.account_level[0].id : null
+}
+
+output "chaos_hub_v2_org_level_id" {
+  description = "The ID of the Chaos Hub V2 Org Level"
+  value       = var.create_chaos_hub_v2_org_level ? harness_chaos_hub_v2.org_level[0].id : null
+}
+
+output "chaos_hub_v2_project_level_id" {
+  description = "The ID of the Chaos Hub V2 Project Level"
+  value       = var.create_chaos_hub_v2_project_level ? harness_chaos_hub_v2.project_level[0].id : null
+}

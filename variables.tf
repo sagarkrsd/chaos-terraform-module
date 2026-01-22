@@ -147,25 +147,25 @@ variable "use_custom_images" {
 variable "log_watcher_image" {
   description = "Custom image for log watcher"
   type        = string
-  default     = "docker.io/harness/chaos-log-watcher:main-latest"
+  default     = "docker.io/harness/chaos-log-watcher:1.72.0"
 }
 
 variable "ddcr_image" {
   description = "Custom image for DDCR (Dedicated Data Collection and Reporting)"
   type        = string
-  default     = "docker.io/harness/chaos-ddcr:autopilot-support2-latest"
+  default     = "docker.io/harness/chaos-ddcr:1.72.0"
 }
 
 variable "ddcr_lib_image" {
   description = "Custom image for DDCR library"
   type        = string
-  default     = "docker.io/harness/chaos-ddcr-faults:1.63.0"
+  default     = "docker.io/harness/chaos-ddcr-faults:1.72.0"
 }
 
 variable "ddcr_fault_image" {
   description = "Custom image for DDCR fault injection"
   type        = string
-  default     = "docker.io/harness/chaos-ddcr-faults:1.63.0"
+  default     = "docker.io/harness/chaos-ddcr-faults:1.72.0"
 }
 
 // Chaos Infrastructure Configuration
@@ -196,7 +196,7 @@ variable "chaos_infra_namespace" {
 variable "chaos_infra_type" {
   description = "Type of the chaos infrastructure"
   type        = string
-  default     = "KUBERNETES"
+  default     = "KUBERNETESV2"
 }
 
 variable "chaos_run_as_user" {
@@ -616,10 +616,64 @@ variable "create_chaos_hub" {
   default     = true
 }
 
+variable "create_chaos_hub_v2_account_level" {
+  description = "Whether to create a Chaos Hub V2 Account Level"
+  type        = bool
+  default     = true
+}
+
+variable "create_chaos_hub_v2_org_level" {
+  description = "Whether to create a Chaos Hub V2 Org Level"
+  type        = bool
+  default     = true
+}
+
+variable "create_chaos_hub_v2_project_level" {
+  description = "Whether to create a Chaos Hub V2 Project Level"
+  type        = bool
+  default     = true
+}
+
 variable "chaos_hub_name" {
   description = "Name of the Chaos Hub"
   type        = string
   default     = "harness-chaos-hub"
+}
+
+variable "chaos_hub_v2_account_level_name" {
+  description = "Name of the Chaos Hub"
+  type        = string
+  default     = "tf-chaos-hub-account-level"
+}
+
+variable "chaos_hub_v2_account_level_identity" {
+  description = "Identity of the Chaos Hub"
+  type        = string
+  default     = "tf-chaos-hub-account-level"
+}
+
+variable "chaos_hub_v2_org_level_name" {
+  description = "Name of the Chaos Hub"
+  type        = string
+  default     = "tf-chaos-hub-org-level"
+}
+
+variable "chaos_hub_v2_org_level_identity" {
+  description = "Identity of the Chaos Hub"
+  type        = string
+  default     = "tf-chaos-hub-org-level"
+}
+
+variable "chaos_hub_v2_project_level_name" {
+  description = "Name of the Chaos Hub"
+  type        = string
+  default     = "tf-chaos-hub-project-level"
+}
+
+variable "chaos_hub_v2_project_level_identity" {
+  description = "Identity of the Chaos Hub"
+  type        = string
+  default     = "tf-chaos-hub-project-level"
 }
 
 variable "chaos_hub_description" {

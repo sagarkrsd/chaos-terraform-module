@@ -317,6 +317,64 @@ resource "harness_chaos_hub" "this" {
   }
 }
 
+// 10.3 Create Chaos Hub
+resource "harness_chaos_hub_v2" "account_level" {
+  count = var.create_chaos_hub_v2_account_level ? 1 : 0
+
+  identity = "account_level_custom_chaos_hub"
+  name        = "account_level_custom_chaos_hub"
+  description = var.chaos_hub_description
+
+  tags = var.chaos_hub_tags
+
+  // Add common tags to the resource
+  lifecycle {
+    ignore_changes = [
+      // Ignore changes to tags as they may be modified outside of Terraform
+      tags,
+    ]
+  }
+}
+
+resource "harness_chaos_hub_v2" "org_level" {
+  count = var.create_chaos_hub_v2_org_level ? 1 : 0
+
+  org_id      = local.org_id
+  identity    = var.chaos_hub_v2_org_level_identity
+  name        = var.chaos_hub_v2_org_level_name
+  description = var.chaos_hub_description
+
+  tags = var.chaos_hub_tags
+
+  // Add common tags to the resource
+  lifecycle {
+    ignore_changes = [
+      // Ignore changes to tags as they may be modified outside of Terraform
+      tags,
+    ]
+  }
+}
+
+resource "harness_chaos_hub_v2" "project_level" {
+  count = var.create_chaos_hub_v2_project_level ? 1 : 0
+
+  org_id      = local.org_id
+  project_id  = local.project_id
+  identity    = var.chaos_hub_v2_project_level_identity
+  name        = var.chaos_hub_v2_project_level_name
+  description = var.chaos_hub_description
+
+  tags = var.chaos_hub_tags
+
+  // Add common tags to the resource
+  lifecycle {
+    ignore_changes = [
+      // Ignore changes to tags as they may be modified outside of Terraform
+      tags,
+    ]
+  }
+}
+
 // 11. Create Security Governance Condition
 resource "harness_chaos_security_governance_condition" "this" {
   depends_on = [
