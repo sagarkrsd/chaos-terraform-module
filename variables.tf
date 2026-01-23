@@ -922,3 +922,162 @@ variable "probe_test_hub_identity" {
   default     = ""
 }
 
+# APM Probe Template Connector Variables
+# Prometheus Connector Variables
+variable "prometheus_connector_id" {
+  description = "Prometheus connector ID for APM probe tests (leave empty to skip real connector tests)"
+  type        = string
+  default     = ""
+}
+
+variable "prometheus_query" {
+  description = "Prometheus query for APM probe tests"
+  type        = string
+  default     = "up{job='api-server'}"
+}
+
+variable "prometheus_threshold" {
+  description = "Prometheus metric threshold for APM probe tests"
+  type        = string
+  default     = "100"
+}
+
+# Datadog Connector Variables
+variable "datadog_connector_id" {
+  description = "Datadog connector ID for APM probe tests (leave empty to skip real connector tests)"
+  type        = string
+  default     = ""
+}
+
+variable "datadog_query" {
+  description = "Datadog query for APM probe tests"
+  type        = string
+  default     = "avg:system.cpu.user{*}"
+}
+
+variable "datadog_threshold" {
+  description = "Datadog metric threshold for APM probe tests"
+  type        = string
+  default     = "95"
+}
+
+# Dynatrace Connector Variables
+variable "dynatrace_connector_id" {
+  description = "Dynatrace connector ID for APM probe tests (leave empty to skip real connector tests)"
+  type        = string
+  default     = ""
+}
+
+variable "dynatrace_entity_selector" {
+  description = "Dynatrace entity selector for APM probe tests"
+  type        = string
+  default     = "type(SERVICE),tag(environment:production)"
+}
+
+variable "dynatrace_metrics_selector" {
+  description = "Dynatrace metrics selector for APM probe tests"
+  type        = string
+  default     = "builtin:service.response.time:avg"
+}
+
+variable "dynatrace_threshold" {
+  description = "Dynatrace metric threshold for APM probe tests"
+  type        = string
+  default     = "500"
+}
+
+# AppDynamics Connector Variables
+variable "appdynamics_connector_id" {
+  description = "AppDynamics connector ID for APM probe tests (leave empty to skip real connector tests)"
+  type        = string
+  default     = ""
+}
+
+variable "appdynamics_app_name" {
+  description = "AppDynamics application name for APM probe tests"
+  type        = string
+  default     = "MyApplication"
+}
+
+variable "appdynamics_metrics_path" {
+  description = "AppDynamics metrics full path for APM probe tests"
+  type        = string
+  default     = "Application Infrastructure Performance|*|Individual Nodes|*|Agent|*|Availability"
+}
+
+variable "appdynamics_threshold" {
+  description = "AppDynamics metric threshold for APM probe tests"
+  type        = string
+  default     = "1000"
+}
+
+# NewRelic Connector Variables
+variable "newrelic_connector_id" {
+  description = "NewRelic connector ID for APM probe tests (leave empty to skip real connector tests)"
+  type        = string
+  default     = ""
+}
+
+variable "newrelic_query" {
+  description = "NewRelic NRQL query for APM probe tests"
+  type        = string
+  default     = "SELECT average(duration) FROM Transaction WHERE appName = 'MyApp'"
+}
+
+variable "newrelic_query_metric" {
+  description = "NewRelic query metric name for APM probe tests"
+  type        = string
+  default     = "average.duration"
+}
+
+variable "newrelic_threshold" {
+  description = "NewRelic metric threshold for APM probe tests"
+  type        = string
+  default     = "200"
+}
+
+# Splunk Observability Connector Variables
+variable "splunk_connector_id" {
+  description = "Splunk Observability connector ID for APM probe tests (leave empty to skip real connector tests)"
+  type        = string
+  default     = ""
+}
+
+variable "splunk_query" {
+  description = "Splunk Observability query for APM probe tests"
+  type        = string
+  default     = "data('cpu.utilization').mean()"
+}
+
+variable "splunk_threshold" {
+  description = "Splunk metric threshold for APM probe tests"
+  type        = string
+  default     = "85"
+}
+
+# GCP Cloud Monitoring Variables
+variable "gcp_project_id" {
+  description = "GCP project ID for Cloud Monitoring APM probe tests (leave empty to skip real connector tests)"
+  type        = string
+  default     = ""
+}
+
+variable "gcp_service_account_key" {
+  description = "GCP service account key (JSON) for Cloud Monitoring APM probe tests"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "gcp_monitoring_query" {
+  description = "GCP Cloud Monitoring query for APM probe tests"
+  type        = string
+  default     = "fetch gce_instance | metric 'compute.googleapis.com/instance/cpu/utilization' | group_by 1m, [value_utilization_mean: mean(value.utilization)] | every 1m"
+}
+
+variable "gcp_threshold" {
+  description = "GCP metric threshold for APM probe tests"
+  type        = string
+  default     = "90"
+}
+
