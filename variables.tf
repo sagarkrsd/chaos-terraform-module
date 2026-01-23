@@ -253,9 +253,9 @@ variable "chaos_volumes" {
 variable "chaos_volume_mounts" {
   description = "Volume mounts for the chaos infrastructure pods"
   type = list(object({
-    name             = string
-    mount_path       = string
-    read_only        = bool
+    name              = string
+    mount_path        = string
+    read_only         = bool
     mount_propagation = string
   }))
   default = []
@@ -320,8 +320,8 @@ variable "service_discovery_agent_name" {
 variable "sd_installation_type" {
   description = "Type of installation for the service discovery agent"
   type        = string
-  default     = "CONNECTOR"  # or "MANIFEST" depending on your needs
-  
+  default     = "CONNECTOR" # or "MANIFEST" depending on your needs
+
   validation {
     condition     = contains(["CONNECTOR", "MANIFEST"], var.sd_installation_type)
     error_message = "Installation type must be either 'CONNECTOR' or 'MANIFEST'"
@@ -853,11 +853,11 @@ variable "security_governance_rule_time_windows" {
   default = [
     {
       time_zone  = "UTC"
-      start_time = 1711238400000  # Default start time (March 23, 2024 00:00:00 UTC)
+      start_time = 1711238400000 # Default start time (March 23, 2024 00:00:00 UTC)
       duration   = "24h"
       recurrence = {
         type  = "Daily"
-        until = -1  # Recur indefinitely
+        until = -1 # Recur indefinitely
       }
     }
   ]
@@ -886,9 +886,39 @@ variable "chaos_service_account" {
 variable "tags" {
   description = "Common tags for all resources as a map of strings"
   type        = map(string)
-  default     = {
+  default = {
     "managed_by" = "terraform"
     "purpose"    = "chaos-engineering"
   }
+}
+
+# ============================================
+# Test Configuration Variables
+# ============================================
+
+# Action Template Test Variables
+variable "enable_action_template_tests" {
+  description = "Enable action template comprehensive tests"
+  type        = bool
+  default     = true
+}
+
+variable "action_test_hub_identity" {
+  description = "Hub identity to use for action template tests (if empty, uses project_level hub)"
+  type        = string
+  default     = ""
+}
+
+# Probe Template Test Variables
+variable "enable_probe_template_tests" {
+  description = "Enable probe template comprehensive tests"
+  type        = bool
+  default     = true
+}
+
+variable "probe_test_hub_identity" {
+  description = "Hub identity to use for probe template tests (if empty, uses project_level hub)"
+  type        = string
+  default     = ""
 }
 
