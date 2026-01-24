@@ -1100,3 +1100,159 @@ variable "gcp_threshold" {
   default     = "90"
 }
 
+
+# ============================================================================
+# Experiment Template Variables
+# ============================================================================
+
+# Template Identity Variables (for referencing in experiments)
+variable "fault_template_pod_delete_identity" {
+  description = "Identity of pod delete fault template"
+  type        = string
+  default     = "tf-pod-delete-basic"
+}
+
+variable "fault_template_container_kill_identity" {
+  description = "Identity of container kill fault template"
+  type        = string
+  default     = "tf-container-kill-multi"
+}
+
+variable "fault_template_network_loss_identity" {
+  description = "Identity of network loss fault template"
+  type        = string
+  default     = "tf-network-loss-runtime"
+}
+
+variable "fault_template_network_latency_identity" {
+  description = "Identity of network latency fault template"
+  type        = string
+  default     = "tf-network-latency"
+}
+
+variable "fault_template_cpu_stress_identity" {
+  description = "Identity of CPU stress fault template"
+  type        = string
+  default     = "tf-cpu-stress-permissions"
+}
+
+variable "action_template_delay_identity" {
+  description = "Identity of delay action template"
+  type        = string
+  default     = "tf-action-delay"
+}
+
+variable "action_template_script_identity" {
+  description = "Identity of script action template"
+  type        = string
+  default     = "tf-action-script"
+}
+
+variable "action_template_container_identity" {
+  description = "Identity of container action template"
+  type        = string
+  default     = "tf-action-container"
+}
+
+variable "probe_template_http_identity" {
+  description = "Identity of HTTP probe template"
+  type        = string
+  default     = "tf-probe-http"
+}
+
+variable "probe_template_k8s_identity" {
+  description = "Identity of K8s probe template"
+  type        = string
+  default     = "tf-probe-k8s"
+}
+
+variable "probe_template_cmd_identity" {
+  description = "Identity of CMD probe template"
+  type        = string
+  default     = "tf-probe-cmd"
+}
+
+# Infrastructure Variables
+variable "chaos_infrastructure_id" {
+  description = "Chaos infrastructure ID for experiments"
+  type        = string
+  default     = "<+input>"
+}
+
+# Experiment Configuration Variables
+variable "experiment_infra_type" {
+  description = "Default infrastructure type for experiments"
+  type        = string
+  default     = "KubernetesV2"
+}
+
+variable "experiment_cleanup_policy" {
+  description = "Default cleanup policy for experiments (delete or retain)"
+  type        = string
+  default     = "delete"
+  validation {
+    condition     = contains(["delete", "retain"], var.experiment_cleanup_policy)
+    error_message = "Cleanup policy must be either 'delete' or 'retain'."
+  }
+}
+
+variable "experiment_status_check_delay" {
+  description = "Default delay before status check (in seconds)"
+  type        = number
+  default     = 5
+}
+
+variable "experiment_status_check_timeout" {
+  description = "Default timeout for status check (in seconds)"
+  type        = number
+  default     = 180
+}
+
+# Runtime Input Variables (for testing)
+variable "experiment_target_pods" {
+  description = "Target pods selector for experiments (supports runtime input)"
+  type        = string
+  default     = "<+input>"
+}
+
+variable "experiment_chaos_duration" {
+  description = "Chaos duration for experiments (supports runtime input)"
+  type        = string
+  default     = "<+input>"
+}
+
+variable "experiment_pods_affected_percentage" {
+  description = "Percentage of pods to affect (supports runtime input)"
+  type        = string
+  default     = "<+input>"
+}
+
+variable "experiment_network_latency" {
+  description = "Network latency in milliseconds (supports runtime input)"
+  type        = string
+  default     = "<+input>"
+}
+
+variable "experiment_cpu_cores" {
+  description = "Number of CPU cores to stress (supports runtime input)"
+  type        = string
+  default     = "<+input>"
+}
+
+variable "experiment_health_check_url" {
+  description = "Health check URL for probes (supports runtime input)"
+  type        = string
+  default     = "<+input>"
+}
+
+variable "experiment_target_namespace" {
+  description = "Target namespace for experiments (supports runtime input)"
+  type        = string
+  default     = "<+input>"
+}
+
+variable "experiment_custom_command" {
+  description = "Custom command for CMD probes (supports runtime input)"
+  type        = string
+  default     = "<+input>"
+}
