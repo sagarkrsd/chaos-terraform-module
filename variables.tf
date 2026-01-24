@@ -1,4 +1,23 @@
 
+// Fault Template Variables (for testing)
+variable "organization_id" {
+  description = "Organization ID for fault templates"
+  type        = string
+  default     = null
+}
+
+variable "project_id" {
+  description = "Project ID for fault templates"
+  type        = string
+  default     = null
+}
+
+variable "chaos_hub_identity" {
+  description = "Chaos Hub identity for fault templates"
+  type        = string
+  default     = "default"
+}
+
 // Organization Variables
 variable "org_identifier" {
   description = "Organization identifier. If not provided, a new organization will be created"
