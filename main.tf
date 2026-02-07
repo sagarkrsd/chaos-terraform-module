@@ -18,6 +18,10 @@ locals {
 
   // Convert tags map to set of strings for resources that require it
   tags_set = [for k, v in local.common_tags : "${k}=${v}"]
+  
+  // Infrastructure reference for experiments (format: env_id/infra_id)
+  // This is computed after environment and infrastructure are created
+  infra_ref = "${harness_platform_environment.this.id}/${harness_platform_infrastructure.this.id}"
 }
 
 // 1. Create Organization (if not provided)

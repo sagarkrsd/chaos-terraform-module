@@ -1,0 +1,94 @@
+# ============================================================================
+# Example Terraform Variables
+# ============================================================================
+# Copy this file to terraform.tfvars and update with your actual values
+# cp terraform.tfvars.example terraform.tfvars
+
+# ----------------------------------------------------------------------------
+# Foundation
+# ----------------------------------------------------------------------------
+org_identifier     = "chaos_e2e_test_org"
+org_name           = "Chaos E2E Test Org"
+project_identifier = "chaos_e2e_test_project"
+project_name       = "Chaos E2E Test Project"
+project_color      = "#0063F7"
+
+# ----------------------------------------------------------------------------
+# Kubernetes Configuration
+# ----------------------------------------------------------------------------
+k8s_connector_identifier = "chaos_e2e_k8s_connector"
+k8s_connector_name       = "Chaos E2E K8s Connector"
+delegate_selectors       = ["chaos-tf-prod1-delegate"]
+namespace                = "hce"
+
+# ----------------------------------------------------------------------------
+# Chaos Hubs
+# ----------------------------------------------------------------------------
+chaos_hub_account_identity = "e2e_chaos_hub_account"
+chaos_hub_account_name     = "E2E Chaos Hub Account"
+chaos_hub_org_identity     = "e2e_chaos_hub_org"
+chaos_hub_org_name         = "E2E Chaos Hub Org"
+chaos_hub_project_identity = "e2e_chaos_hub_project"
+chaos_hub_project_name     = "E2E Chaos Hub Project"
+
+chaos_hub_tags = ["e2e", "test", "chaos-hub"]
+
+# ----------------------------------------------------------------------------
+# Infrastructure
+# ----------------------------------------------------------------------------
+environment_identifier    = "chaos_e2e_env"
+environment_name          = "Chaos E2E Environment"
+infrastructure_identifier = "chaos_e2e_infra"
+infrastructure_name       = "Chaos E2E Infrastructure"
+deployment_type           = "Kubernetes"
+
+chaos_infra_name         = "Chaos E2E Infrastructure V2"
+chaos_service_account    = "litmus"
+
+chaos_infra_tags = ["e2e", "test", "kubernetes"]
+
+# ----------------------------------------------------------------------------
+# Service Discovery
+# ----------------------------------------------------------------------------
+sd_installation_type = "KUBERNETES"
+sd_namespace         = "chaos-e2e"
+
+# ----------------------------------------------------------------------------
+# Custom Image Registry (Optional)
+# ----------------------------------------------------------------------------
+setup_custom_registry = false
+
+# If using custom registry, uncomment and configure:
+# registry_server              = "your-registry.io"
+# registry_account             = "your-account"
+# log_watcher_image           = ""
+# ddcr_image           = ""
+# ddcr_lib_image           = ""
+# ddcr_fault_image           = ""
+# use_custom_images = false
+
+# ----------------------------------------------------------------------------
+# Security Governance
+# ----------------------------------------------------------------------------
+security_governance_condition_name  = "E2E Security Condition"
+security_governance_rule_name       = "E2E Security Rule"
+security_governance_rule_description = "Security rule for E2E chaos experiments"
+security_governance_rule_is_enabled = true
+
+# User group IDs for approval workflow (optional)
+security_governance_rule_user_group_ids = []
+
+# Time windows for chaos experiments
+# Uses default from variables.tf (24/7 access until 2025-12-31)
+# Uncomment and customize if needed:
+# security_governance_rule_time_windows = [
+#   {
+#     time_zone  = "America/Los_Angeles"
+#     start_time = "2026-01-27T09:00:00"
+#     duration   = "8h"
+#     recurrence = {
+#       type  = "DAILY"
+#       until = "2026-12-31T23:59:59"
+#     }
+#   }
+# ]

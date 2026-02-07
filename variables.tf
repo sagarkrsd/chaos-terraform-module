@@ -1256,3 +1256,37 @@ variable "experiment_custom_command" {
   type        = string
   default     = "<+input>"
 }
+
+# ============================================================================
+# Experiment Variables
+# ============================================================================
+
+variable "infra_ref" {
+  description = "Infrastructure reference for chaos experiments (Kubernetes cluster ID)"
+  type        = string
+  default     = "<+input>"  # Runtime input - must be provided when running experiment
+}
+
+variable "hub_identity" {
+  description = "Identity of the custom chaos hub for experiments"
+  type        = string
+  default     = ""  # Must be provided or use chaos_hub_identity
+}
+
+variable "enterprise_hub_identity" {
+  description = "Identity of the enterprise chaos hub"
+  type        = string
+  default     = "enterprise-chaoshub"  # Default enterprise hub name
+}
+
+variable "org_id" {
+  description = "Organization ID for experiments"
+  type        = string
+  default     = "default"
+}
+
+variable "experiment_name_suffix" {
+  description = "Suffix to append to experiment names for uniqueness (e.g., timestamp or identifier)"
+  type        = string
+  default     = "test"
+}

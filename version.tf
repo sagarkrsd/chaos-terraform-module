@@ -3,7 +3,7 @@ terraform {
   required_providers {
     harness = {
       source  = "harness/harness"
-      version = "0.99.0-dev"
+      version = "0.100.0-dev"
     }
   }
 }
