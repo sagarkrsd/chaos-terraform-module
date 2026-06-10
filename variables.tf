@@ -1,166 +1,239 @@
+# ============================================================================
+# Variables for E2E Chaos Engineering Test
+# ============================================================================
 
-// Fault Template Variables (for testing)
-variable "organization_id" {
-  description = "Organization ID for fault templates"
-  type        = string
-  default     = null
-}
-
-variable "project_id" {
-  description = "Project ID for fault templates"
-  type        = string
-  default     = null
-}
-
-variable "chaos_hub_identity" {
-  description = "Chaos Hub identity for fault templates"
-  type        = string
-  default     = "default"
-}
-
-// Organization Variables
+# ----------------------------------------------------------------------------
+# Foundation Variables
+# ----------------------------------------------------------------------------
 variable "org_identifier" {
-  description = "Organization identifier. If not provided, a new organization will be created"
+  description = "Organization identifier"
   type        = string
-  default     = null
+  default     = "chaos_e2e_test_org"
 }
 
 variable "org_name" {
-  description = "Name of the organization to create (if org_identifier is not provided)"
+  description = "Organization name"
   type        = string
-  default     = "chaos terraform demo"
+  default     = "Chaos E2E Test Org"
 }
 
-// Project Variables
 variable "project_identifier" {
-  description = "Project identifier. If not provided, a new project will be created"
+  description = "Project identifier"
   type        = string
-  default     = null
+  default     = "chaos_e2e_test_project"
 }
 
 variable "project_name" {
-  description = "Name of the project to create (if project_identifier is not provided)"
+  description = "Project name"
   type        = string
-  default     = "chaos terraform demo"
+  default     = "Chaos E2E Test Project"
 }
 
 variable "project_color" {
-  description = "Color code for the project"
+  description = "Project color"
   type        = string
   default     = "#0063F7"
 }
 
-// Kubernetes Connector Variables
-variable "k8s_connector_name" {
-  description = "Name of the Kubernetes connector"
+# ----------------------------------------------------------------------------
+# Connector Variables
+# ----------------------------------------------------------------------------
+variable "k8s_connector_identifier" {
+  description = "Kubernetes connector identifier"
   type        = string
-  default     = "chaosk8sconnector"
+  default     = "chaos_e2e_k8s_connector"
+}
+
+variable "k8s_connector_name" {
+  description = "Kubernetes connector name"
+  type        = string
+  default     = "Chaos E2E K8s Connector"
 }
 
 variable "delegate_selectors" {
-  description = "Selectors to use for the Kubernetes connector"
+  description = "Delegate selectors"
   type        = list(string)
   default     = ["chaos-delegate"]
 }
 
-// Infrastructure Variables
+# ----------------------------------------------------------------------------
+# Chaos Hub Variables
+# ----------------------------------------------------------------------------
+variable "chaos_hub_account_identity" {
+  description = "Account-level chaos hub identity"
+  type        = string
+  default     = "e2e_chaos_hub_account"
+}
+
+variable "chaos_hub_account_name" {
+  description = "Account-level chaos hub name"
+  type        = string
+  default     = "E2E Chaos Hub Account"
+}
+
+variable "chaos_hub_org_identity" {
+  description = "Org-level chaos hub identity"
+  type        = string
+  default     = "e2e_chaos_hub_org"
+}
+
+variable "chaos_hub_org_name" {
+  description = "Org-level chaos hub name"
+  type        = string
+  default     = "E2E Chaos Hub Org"
+}
+
+variable "chaos_hub_project_identity" {
+  description = "Project-level chaos hub identity"
+  type        = string
+  default     = "e2e_chaos_hub_project"
+}
+
+variable "chaos_hub_project_name" {
+  description = "Project-level chaos hub name"
+  type        = string
+  default     = "E2E Chaos Hub Project"
+}
+
+variable "chaos_hub_tags" {
+  description = "Tags for chaos hubs"
+  type        = list(string)
+  default     = ["e2e", "test", "chaos-hub"]
+}
+
+# ----------------------------------------------------------------------------
+# Infrastructure Variables
+# ----------------------------------------------------------------------------
 variable "environment_identifier" {
   description = "Environment identifier"
   type        = string
-  default     = "tf_demo_env"
+  default     = "chaos_e2e_env"
 }
 
 variable "environment_name" {
-  description = "Name of the environment"
+  description = "Environment name"
   type        = string
-  default     = "terraform demo env"
+  default     = "Chaos E2E Environment"
 }
 
 variable "infrastructure_identifier" {
   description = "Infrastructure identifier"
   type        = string
-  default     = "tf_demo_infra"
+  default     = "chaos_e2e_infra"
+}
+
+variable "infrastructure_name" {
+  description = "Infrastructure name"
+  type        = string
+  default     = "Chaos E2E Infrastructure"
 }
 
 variable "deployment_type" {
-  description = "Deployment type for the infrastructure"
+  description = "Deployment type"
   type        = string
   default     = "Kubernetes"
 }
 
-variable "infrastructure_name" {
-  description = "Name of the infrastructure"
-  type        = string
-  default     = "terraform demo infra"
-}
-
 variable "namespace" {
-  description = "Kubernetes namespace for the infrastructure"
+  description = "Kubernetes namespace"
   type        = string
-  default     = "hce"
+  default     = "chaos-e2e"
 }
 
-// Registry Variables
+variable "chaos_infra_name" {
+  description = "Chaos infrastructure name"
+  type        = string
+  default     = "Chaos E2E Infrastructure V2"
+}
+
+variable "chaos_infra_type" {
+  description = "Chaos infrastructure type"
+  type        = string
+  default     = "KUBERNETESV2"
+}
+
+variable "chaos_service_account" {
+  description = "Chaos service account"
+  type        = string
+  default     = "litmus"
+}
+
+variable "chaos_infra_tags" {
+  description = "Tags for chaos infrastructure"
+  type        = list(string)
+  default     = ["e2e", "test", "kubernetes"]
+}
+
+# ----------------------------------------------------------------------------
+# Service Discovery Variables
+# ----------------------------------------------------------------------------
+variable "sd_installation_type" {
+  description = "Service discovery installation type"
+  type        = string
+  default     = "CONNECTOR"
+}
+
+variable "service_discovery_agent_name" {
+  description = "Service discovery agent name"
+  type        = string
+  default     = "Chaos E2E Service Discovery Agent"
+}
+
+variable "sd_namespace" {
+  description = "Service discovery namespace"
+  type        = string
+  default     = "chaos-e2e"
+}
+
+# ----------------------------------------------------------------------------
+# Image Registry Variables (Optional)
+# ----------------------------------------------------------------------------
 variable "setup_custom_registry" {
-  description = "Whether to setup custom registry"
+  description = "Setup custom image registry"
   type        = bool
-  default     = true
-}
-
-variable "registry_username" {
-  description = "Username for the container registry"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "registry_password" {
-  description = "Password for the container registry"
-  type        = string
-  default     = ""
-  sensitive   = true
+  default     = false
 }
 
 variable "registry_server" {
-  description = "URL of the container registry"
+  description = "Registry server URL"
   type        = string
-  default     = "harness.io"
+  default     = "docker.io"
 }
 
 variable "registry_account" {
-  description = "Account name for the container registry"
+  description = "Registry account/username"
   type        = string
   default     = "harness"
 }
 
-variable "registry_secret_name" {
-  description = "Name of the Kubernetes secret containing registry credentials"
-  type        = string
-  default     = ""
-}
-
-variable "is_private_registry" {
-  description = "Whether the container registry is private"
-  type        = bool
-  default     = false
-}
-
 variable "is_default_registry" {
-  description = "Whether this should be the default registry"
+  description = "Set as default registry"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "is_override_allowed" {
-  description = "Whether to allow overriding the registry settings"
+  description = "Allow override of registry"
   type        = bool
   default     = true
 }
 
-variable "use_custom_images" {
-  description = "Whether to use custom images for chaos components"
+variable "is_private_registry" {
+  description = "Is private registry"
   type        = bool
-  default     = true
+  default     = false
+}
+
+variable "registry_secret_name" {
+  description = "Secret name for registry authentication"
+  type        = string
+  default     = "harness-registry-secret"
+}
+
+variable "use_custom_images" {
+  description = "Use custom images"
+  type        = bool
+  default     = false
 }
 
 variable "log_watcher_image" {
@@ -187,561 +260,13 @@ variable "ddcr_fault_image" {
   default     = "docker.io/harness/chaos-ddcr-faults:1.72.0"
 }
 
-// Chaos Infrastructure Configuration
-variable "chaos_infrastructure_identifier" {
-  description = "Identifier for the chaos infrastructure"
-  type        = string
-  default     = "chaos_terraform_infra"
-}
-
-variable "chaos_infra_name" {
-  description = "Name of the chaos infrastructure"
-  type        = string
-  default     = "chaos terraform infra"
-}
-
-variable "chaos_infra_description" {
-  description = "Description for the chaos infrastructure"
-  type        = string
-  default     = "Chaos Infrastructure for running chaos experiments"
-}
-
-variable "chaos_infra_namespace" {
-  description = "Kubernetes namespace for the chaos infrastructure"
-  type        = string
-  default     = "hce"
-}
-
-variable "chaos_infra_type" {
-  description = "Type of the chaos infrastructure"
-  type        = string
-  default     = "KUBERNETESV2"
-}
-
-variable "chaos_run_as_user" {
-  description = "User ID to run the chaos infrastructure pods as"
-  type        = number
-  default     = null
-}
-
-variable "chaos_run_as_group" {
-  description = "Group ID to run the chaos infrastructure pods as"
-  type        = number
-  default     = null
-}
-
-variable "chaos_ai_enabled" {
-  description = "Whether AI features are enabled for the chaos infrastructure"
-  type        = bool
-  default     = false
-}
-
-variable "chaos_insecure_skip_verify" {
-  description = "Whether to skip TLS verification for the chaos infrastructure"
-  type        = bool
-  default     = false
-}
-
-variable "node_selector" {
-  description = "Node selector for the chaos infrastructure pods"
-  type        = map(string)
-  default     = {}
-}
-
-variable "chaos_labels" {
-  description = "Labels to apply to the chaos infrastructure"
-  type        = map(string)
-  default     = {}
-}
-
-variable "chaos_annotations" {
-  description = "Annotations to apply to the chaos infrastructure"
-  type        = map(string)
-  default     = {}
-}
-
-variable "chaos_volumes" {
-  description = "Volumes to mount in the chaos infrastructure pods"
-  type = list(object({
-    name       = string
-    size_limit = string
-  }))
-  default = []
-}
-
-variable "chaos_volume_mounts" {
-  description = "Volume mounts for the chaos infrastructure pods"
-  type = list(object({
-    name              = string
-    mount_path        = string
-    read_only         = bool
-    mount_propagation = string
-  }))
-  default = []
-}
-
-variable "chaos_env_vars" {
-  description = "Environment variables for the chaos infrastructure"
-  type = list(object({
-    name  = string
-    value = string
-  }))
-  default = []
-}
-
-variable "chaos_tolerations" {
-  description = "Tolerations for the chaos infrastructure pods"
-  type = list(object({
-    key                = string
-    operator           = string
-    value              = string
-    effect             = string
-    toleration_seconds = number
-  }))
-  default = []
-}
-
-variable "chaos_mtls" {
-  description = "mTLS configuration for the chaos infrastructure"
-  type = object({
-    cert_path   = string
-    key_path    = string
-    secret_name = string
-    url         = string
-  })
-  default = null
-}
-
-variable "chaos_proxy" {
-  description = "Proxy configuration for the chaos infrastructure"
-  type = object({
-    http_proxy  = string
-    https_proxy = string
-    no_proxy    = string
-    url         = string
-  })
-  default = null
-}
-
-variable "service_account_name" {
-  description = "Name of the Kubernetes service account for chaos infrastructure"
-  type        = string
-  default     = "litmus"
-}
-
-// Service Discovery Agent Variables
-variable "service_discovery_agent_name" {
-  description = "Name of the service discovery agent"
-  type        = string
-  default     = "service discovery terraform agent"
-}
-
-variable "sd_installation_type" {
-  description = "Type of installation for the service discovery agent"
-  type        = string
-  default     = "CONNECTOR" # or "MANIFEST" depending on your needs
-
-  validation {
-    condition     = contains(["CONNECTOR", "MANIFEST"], var.sd_installation_type)
-    error_message = "Installation type must be either 'CONNECTOR' or 'MANIFEST'"
-  }
-}
-
-variable "permanent_installation" {
-  description = "Whether the service discovery agent is permanently installed"
-  type        = bool
-  default     = false
-}
-
-variable "correlation_id" {
-  description = "Correlation ID for the service discovery agent"
-  type        = string
-  default     = null
-}
-
-variable "sd_collector_image" {
-  description = "Docker image for the service discovery collector"
-  type        = string
-  default     = "harness/service-discovery-collector:main-latest"
-}
-
-variable "sd_log_watcher_image" {
-  description = "Docker image for the log watcher"
-  type        = string
-  default     = "harness/chaos-log-watcher:main-latest"
-}
-
-variable "skip_secure_verify" {
-  description = "Whether to skip TLS verification"
-  type        = bool
-  default     = false
-}
-
-variable "sd_namespace" {
-  description = "Kubernetes namespace for the service discovery agent"
-  type        = string
-  default     = "tf-discovery"
-}
-
-variable "sd_service_account" {
-  description = "Service account for the service discovery agent"
-  type        = string
-  default     = "tf-discovery-sa"
-}
-
-variable "sd_image_pull_policy" {
-  description = "Image pull policy for the service discovery agent"
-  type        = string
-  default     = "Always"
-}
-
-variable "sd_run_as_user" {
-  description = "User ID to run the service discovery agent as"
-  type        = number
-  default     = 2000
-}
-
-variable "sd_run_as_group" {
-  description = "Group ID to run the service discovery agent as"
-  type        = number
-  default     = 2000
-}
-
-variable "sd_kubernetes_labels" {
-  description = "Labels to apply to the service discovery agent pods"
-  type        = map(string)
-  default     = {}
-}
-
-variable "sd_kubernetes_annotations" {
-  description = "Annotations to apply to the service discovery agent pods"
-  type        = map(string)
-  default     = {}
-}
-
-variable "sd_node_selector" {
-  description = "Node selector for the service discovery agent pods"
-  type        = map(string)
-  default     = {}
-}
-
-variable "sd_resources_limits" {
-  description = "Resource limits for the service discovery agent"
-  type = object({
-    cpu    = string
-    memory = string
-  })
-  default = {
-    cpu    = "500m"
-    memory = "512Mi"
-  }
-}
-
-variable "sd_resources_requests" {
-  description = "Resource requests for the service discovery agent"
-  type = object({
-    cpu    = string
-    memory = string
-  })
-  default = {
-    cpu    = "250m"
-    memory = "256Mi"
-  }
-}
-
-variable "sd_tolerations" {
-  description = "Tolerations for the service discovery agent pods"
-  type = list(object({
-    key      = string
-    operator = string
-    value    = string
-    effect   = string
-  }))
-  default = []
-}
-
-variable "enable_node_agent" {
-  description = "Whether to enable node agent for service discovery"
-  type        = bool
-  default     = true
-}
-
-variable "node_agent_selector" {
-  description = "Node selector for the node agent"
-  type        = string
-  default     = ""
-}
-
-variable "enable_batch_resources" {
-  description = "Whether to enable batch resources collection"
-  type        = bool
-  default     = false
-}
-
-variable "enable_orphaned_pod" {
-  description = "Whether to enable orphaned pod detection"
-  type        = bool
-  default     = false
-}
-
-variable "namespace_selector" {
-  description = "Label selector for namespaces to watch"
-  type        = string
-  default     = ""
-}
-
-variable "collection_window_in_min" {
-  description = "Collection window in minutes"
-  type        = number
-  default     = 5
-}
-
-variable "blacklisted_namespaces" {
-  description = "List of namespaces to exclude from discovery"
-  type        = list(string)
-  default     = ["kube-system", "kube-public"]
-}
-
-variable "observed_namespaces" {
-  description = "List of namespaces to observe (if empty, all namespaces are observed)"
-  type        = list(string)
-  default     = []
-}
-
-variable "sd_cron_expression" {
-  description = "Cron expression for the service discovery schedule"
-  type        = string
-  default     = "0/15 * * * *"
-}
-
-
-// Git Connector Variables
-variable "create_git_connector" {
-  description = "Whether to create a Git connector"
-  type        = bool
-  default     = false
-}
-
-
-
-// variable "git_connector_url" {
-//   description = "URL of the Git repository"
-//   type        = string
-//   default     = ""
-// }
-
-// variable "git_connector_username" {
-//   description = "Username for Git authentication"
-//   type        = string
-//   default     = ""
-//   sensitive   = true
-// }
-
-// variable "git_connector_password" {
-//   description = "Password or token for Git authentication"
-//   type        = string
-//   default     = ""
-//   sensitive   = true
-// }
-
-// variable "git_connector_ssh_key" {
-//   description = "SSH private key for Git authentication"
-//   type        = string
-//   default     = ""
-//   sensitive   = true
-// }
-
-// variable "git_connector_ssh_key_passphrase" {
-//   description = "Passphrase for the SSH private key"
-//   type        = string
-//   default     = ""
-//   sensitive   = true
-// }
-
-variable "git_connector_validation_repo" {
-  description = "Repository to validate the Git connector"
-  type        = string
-  default     = ""
-}
-
-variable "github_app_id" {
-  description = "GitHub App ID"
-  type        = string
-  default     = ""
-}
-
-variable "github_installation_id" {
-  description = "GitHub App Installation ID"
-  type        = string
-  default     = ""
-}
-
-variable "github_private_key_ref" {
-  description = "Reference to the GitHub App private key"
-  type        = string
-  default     = ""
-}
-
-variable "git_connector_name" {
-  description = "Name for the Git connector (only used if create_git_connector is true)"
-  type        = string
-  default     = "harness-chaos-hub-git-connector"
-}
-
-variable "git_connector_url" {
-  description = "URL for the Git repository (only used if create_git_connector is true)"
-  type        = string
-  default     = "https://github.com/wings-software/enterprise-chaos-hub"
-}
-
-variable "git_connector_branch" {
-  description = "Branch for the Git repository (only used if create_git_connector is true)"
-  type        = string
-  default     = "main"
-}
-
-variable "git_connector_username" {
-  description = "Username for Git authentication (only used if create_git_connector is true and using username/password auth)"
-  type        = string
-  default     = "sagarkrsd"
-  sensitive   = true
-}
-
-variable "git_connector_password" {
-  description = "Password or token for Git authentication (only used if create_git_connector is true and using username/password auth)"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "git_connector_ssh_key" {
-  description = "SSH private key for Git authentication (only used if create_git_connector is true and using SSH auth)"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "git_connector_ssh_key_passphrase" {
-  description = "Passphrase for SSH private key (only used if create_git_connector is true and using SSH auth with passphrase)"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-// Chaos Hub Variables
-variable "create_chaos_hub" {
-  description = "Whether to create a Chaos Hub"
-  type        = bool
-  default     = true
-}
-
-variable "create_chaos_hub_v2_account_level" {
-  description = "Whether to create a Chaos Hub V2 Account Level"
-  type        = bool
-  default     = true
-}
-
-variable "create_chaos_hub_v2_org_level" {
-  description = "Whether to create a Chaos Hub V2 Org Level"
-  type        = bool
-  default     = true
-}
-
-variable "create_chaos_hub_v2_project_level" {
-  description = "Whether to create a Chaos Hub V2 Project Level"
-  type        = bool
-  default     = true
-}
-
-variable "chaos_hub_name" {
-  description = "Name of the Chaos Hub"
-  type        = string
-  default     = "harness-chaos-hub"
-}
-
-variable "chaos_hub_v2_account_level_name" {
-  description = "Name of the Chaos Hub"
-  type        = string
-  default     = "tf-chaos-hub-account-level"
-}
-
-variable "chaos_hub_v2_account_level_identity" {
-  description = "Identity of the Chaos Hub"
-  type        = string
-  default     = "tf-chaos-hub-account-level"
-}
-
-variable "chaos_hub_v2_org_level_name" {
-  description = "Name of the Chaos Hub"
-  type        = string
-  default     = "tf-chaos-hub-org-level"
-}
-
-variable "chaos_hub_v2_org_level_identity" {
-  description = "Identity of the Chaos Hub"
-  type        = string
-  default     = "tf-chaos-hub-org-level"
-}
-
-variable "chaos_hub_v2_project_level_name" {
-  description = "Name of the Chaos Hub"
-  type        = string
-  default     = "tf-chaos-hub-project-level"
-}
-
-variable "chaos_hub_v2_project_level_identity" {
-  description = "Identity of the Chaos Hub"
-  type        = string
-  default     = "tf-chaos-hub-project-level"
-}
-
-variable "chaos_hub_description" {
-  description = "Description of the Chaos Hub"
-  type        = string
-  default     = "Harness Chaos Hub for chaos experiments"
-}
-
-variable "chaos_hub_connector_id" {
-  description = "ID of the Git connector for the Chaos Hub"
-  type        = string
-  default     = "tfchaoshubacclevelconnector"
-}
-
-variable "chaos_hub_connector_scope" {
-  description = "Scope of the Git connector for the Chaos Hub"
-  type        = string
-  default     = "PROJECT"
-}
-
-variable "chaos_hub_repo_branch" {
-  description = "Branch for the Chaos Hub repository"
-  type        = string
-  default     = "main"
-}
-
-variable "chaos_hub_repo_name" {
-  description = "Name of the Chaos Hub repository"
-  type        = string
-  default     = "enterprise-chaos-hub"
-}
-
-variable "chaos_hub_is_default" {
-  description = "Whether this should be the default Chaos Hub"
-  type        = bool
-  default     = false
-}
-
-variable "chaos_hub_tags" {
-  description = "Tags to apply to the Chaos Hub"
-  type        = list(string)
-  default     = ["harness", "chaos-engineering"]
-}
-
-# Security Governance Condition Variables
+# ----------------------------------------------------------------------------
+# Security Governance Variables
+# ----------------------------------------------------------------------------
 variable "security_governance_condition_name" {
-  description = "Name of the security governance condition"
+  description = "Security governance condition name"
   type        = string
-  default     = "deny-destructive-experiments"
+  default     = "e2e-security-condition"
 }
 
 variable "security_governance_condition_infra_type" {
@@ -755,7 +280,7 @@ variable "security_governance_condition_infra_type" {
 }
 
 variable "security_governance_condition_operator" {
-  description = "Operator for the fault specification (EQUAL_TO, NOT_EQUAL_TO, etc.)"
+  description = "Operator for the fault specification"
   type        = string
   default     = "NOT_EQUAL_TO"
 }
@@ -774,6 +299,10 @@ variable "security_governance_condition_faults" {
     {
       fault_type = "FAULT"
       name       = "container-kill"
+    },
+    {
+      fault_type = "FAULT"
+      name       = "pod-network-loss"
     }
   ]
 }
@@ -880,413 +409,4 @@ variable "security_governance_rule_time_windows" {
       }
     }
   ]
-}
-
-# Common Variables
-variable "annotations" {
-  description = "Annotations to apply to resources"
-  type        = map(string)
-  default     = {}
-}
-
-variable "labels" {
-  description = "Labels to apply to resources"
-  type        = map(string)
-  default     = {}
-}
-
-variable "chaos_service_account" {
-  description = "Service account for chaos infrastructure"
-  type        = string
-  default     = "chaos-service-account"
-}
-
-# Common Tags
-variable "tags" {
-  description = "Common tags for all resources as a map of strings"
-  type        = map(string)
-  default = {
-    "managed_by" = "terraform"
-    "purpose"    = "chaos-engineering"
-  }
-}
-
-# ============================================
-# Test Configuration Variables
-# ============================================
-
-# Action Template Test Variables
-variable "enable_action_template_tests" {
-  description = "Enable action template comprehensive tests"
-  type        = bool
-  default     = true
-}
-
-variable "action_test_hub_identity" {
-  description = "Hub identity to use for action template tests (if empty, uses project_level hub)"
-  type        = string
-  default     = ""
-}
-
-# Probe Template Test Variables
-variable "enable_probe_template_tests" {
-  description = "Enable probe template comprehensive tests"
-  type        = bool
-  default     = true
-}
-
-variable "probe_test_hub_identity" {
-  description = "Hub identity to use for probe template tests (if empty, uses project_level hub)"
-  type        = string
-  default     = ""
-}
-
-# APM Probe Template Connector Variables
-# Prometheus Connector Variables
-variable "prometheus_connector_id" {
-  description = "Prometheus connector ID for APM probe tests (leave empty to skip real connector tests)"
-  type        = string
-  default     = ""
-}
-
-variable "prometheus_query" {
-  description = "Prometheus query for APM probe tests"
-  type        = string
-  default     = "up{job='api-server'}"
-}
-
-variable "prometheus_threshold" {
-  description = "Prometheus metric threshold for APM probe tests"
-  type        = string
-  default     = "100"
-}
-
-# Datadog Connector Variables
-variable "datadog_connector_id" {
-  description = "Datadog connector ID for APM probe tests (leave empty to skip real connector tests)"
-  type        = string
-  default     = ""
-}
-
-variable "datadog_query" {
-  description = "Datadog query for APM probe tests"
-  type        = string
-  default     = "avg:system.cpu.user{*}"
-}
-
-variable "datadog_threshold" {
-  description = "Datadog metric threshold for APM probe tests"
-  type        = string
-  default     = "95"
-}
-
-# Dynatrace Connector Variables
-variable "dynatrace_connector_id" {
-  description = "Dynatrace connector ID for APM probe tests (leave empty to skip real connector tests)"
-  type        = string
-  default     = ""
-}
-
-variable "dynatrace_entity_selector" {
-  description = "Dynatrace entity selector for APM probe tests"
-  type        = string
-  default     = "type(SERVICE),tag(environment:production)"
-}
-
-variable "dynatrace_metrics_selector" {
-  description = "Dynatrace metrics selector for APM probe tests"
-  type        = string
-  default     = "builtin:service.response.time:avg"
-}
-
-variable "dynatrace_threshold" {
-  description = "Dynatrace metric threshold for APM probe tests"
-  type        = string
-  default     = "500"
-}
-
-# AppDynamics Connector Variables
-variable "appdynamics_connector_id" {
-  description = "AppDynamics connector ID for APM probe tests (leave empty to skip real connector tests)"
-  type        = string
-  default     = ""
-}
-
-variable "appdynamics_app_name" {
-  description = "AppDynamics application name for APM probe tests"
-  type        = string
-  default     = "MyApplication"
-}
-
-variable "appdynamics_metrics_path" {
-  description = "AppDynamics metrics full path for APM probe tests"
-  type        = string
-  default     = "Application Infrastructure Performance|*|Individual Nodes|*|Agent|*|Availability"
-}
-
-variable "appdynamics_threshold" {
-  description = "AppDynamics metric threshold for APM probe tests"
-  type        = string
-  default     = "1000"
-}
-
-# NewRelic Connector Variables
-variable "newrelic_connector_id" {
-  description = "NewRelic connector ID for APM probe tests (leave empty to skip real connector tests)"
-  type        = string
-  default     = ""
-}
-
-variable "newrelic_query" {
-  description = "NewRelic NRQL query for APM probe tests"
-  type        = string
-  default     = "SELECT average(duration) FROM Transaction WHERE appName = 'MyApp'"
-}
-
-variable "newrelic_query_metric" {
-  description = "NewRelic query metric name for APM probe tests"
-  type        = string
-  default     = "average.duration"
-}
-
-variable "newrelic_threshold" {
-  description = "NewRelic metric threshold for APM probe tests"
-  type        = string
-  default     = "200"
-}
-
-# Splunk Observability Connector Variables
-variable "splunk_connector_id" {
-  description = "Splunk Observability connector ID for APM probe tests (leave empty to skip real connector tests)"
-  type        = string
-  default     = ""
-}
-
-variable "splunk_query" {
-  description = "Splunk Observability query for APM probe tests"
-  type        = string
-  default     = "data('cpu.utilization').mean()"
-}
-
-variable "splunk_threshold" {
-  description = "Splunk metric threshold for APM probe tests"
-  type        = string
-  default     = "85"
-}
-
-# GCP Cloud Monitoring Variables
-variable "gcp_project_id" {
-  description = "GCP project ID for Cloud Monitoring APM probe tests (leave empty to skip real connector tests)"
-  type        = string
-  default     = ""
-}
-
-variable "gcp_service_account_key" {
-  description = "GCP service account key (JSON) for Cloud Monitoring APM probe tests"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "gcp_monitoring_query" {
-  description = "GCP Cloud Monitoring query for APM probe tests"
-  type        = string
-  default     = "fetch gce_instance | metric 'compute.googleapis.com/instance/cpu/utilization' | group_by 1m, [value_utilization_mean: mean(value.utilization)] | every 1m"
-}
-
-variable "gcp_threshold" {
-  description = "GCP metric threshold for APM probe tests"
-  type        = string
-  default     = "90"
-}
-
-
-# ============================================================================
-# Experiment Template Variables
-# ============================================================================
-
-# Template Identity Variables (for referencing in experiments)
-variable "fault_template_pod_delete_identity" {
-  description = "Identity of pod delete fault template"
-  type        = string
-  default     = "tf-pod-delete-basic"
-}
-
-variable "fault_template_container_kill_identity" {
-  description = "Identity of container kill fault template"
-  type        = string
-  default     = "tf-container-kill-multi"
-}
-
-variable "fault_template_network_loss_identity" {
-  description = "Identity of network loss fault template"
-  type        = string
-  default     = "tf-network-loss-runtime"
-}
-
-variable "fault_template_network_latency_identity" {
-  description = "Identity of network latency fault template"
-  type        = string
-  default     = "tf-network-latency"
-}
-
-variable "fault_template_cpu_stress_identity" {
-  description = "Identity of CPU stress fault template"
-  type        = string
-  default     = "tf-cpu-stress-permissions"
-}
-
-variable "action_template_delay_identity" {
-  description = "Identity of delay action template"
-  type        = string
-  default     = "tf-action-delay"
-}
-
-variable "action_template_script_identity" {
-  description = "Identity of script action template"
-  type        = string
-  default     = "tf-action-script"
-}
-
-variable "action_template_container_identity" {
-  description = "Identity of container action template"
-  type        = string
-  default     = "tf-action-container"
-}
-
-variable "probe_template_http_identity" {
-  description = "Identity of HTTP probe template"
-  type        = string
-  default     = "tf-probe-http"
-}
-
-variable "probe_template_k8s_identity" {
-  description = "Identity of K8s probe template"
-  type        = string
-  default     = "tf-probe-k8s"
-}
-
-variable "probe_template_cmd_identity" {
-  description = "Identity of CMD probe template"
-  type        = string
-  default     = "tf-probe-cmd"
-}
-
-# Infrastructure Variables
-variable "chaos_infrastructure_id" {
-  description = "Chaos infrastructure ID for experiments"
-  type        = string
-  default     = "<+input>"
-}
-
-# Experiment Configuration Variables
-variable "experiment_infra_type" {
-  description = "Default infrastructure type for experiments"
-  type        = string
-  default     = "KubernetesV2"
-}
-
-variable "experiment_cleanup_policy" {
-  description = "Default cleanup policy for experiments (delete or retain)"
-  type        = string
-  default     = "delete"
-  validation {
-    condition     = contains(["delete", "retain"], var.experiment_cleanup_policy)
-    error_message = "Cleanup policy must be either 'delete' or 'retain'."
-  }
-}
-
-variable "experiment_status_check_delay" {
-  description = "Default delay before status check (in seconds)"
-  type        = number
-  default     = 5
-}
-
-variable "experiment_status_check_timeout" {
-  description = "Default timeout for status check (in seconds)"
-  type        = number
-  default     = 180
-}
-
-# Runtime Input Variables (for testing)
-variable "experiment_target_pods" {
-  description = "Target pods selector for experiments (supports runtime input)"
-  type        = string
-  default     = "<+input>"
-}
-
-variable "experiment_chaos_duration" {
-  description = "Chaos duration for experiments (supports runtime input)"
-  type        = string
-  default     = "<+input>"
-}
-
-variable "experiment_pods_affected_percentage" {
-  description = "Percentage of pods to affect (supports runtime input)"
-  type        = string
-  default     = "<+input>"
-}
-
-variable "experiment_network_latency" {
-  description = "Network latency in milliseconds (supports runtime input)"
-  type        = string
-  default     = "<+input>"
-}
-
-variable "experiment_cpu_cores" {
-  description = "Number of CPU cores to stress (supports runtime input)"
-  type        = string
-  default     = "<+input>"
-}
-
-variable "experiment_health_check_url" {
-  description = "Health check URL for probes (supports runtime input)"
-  type        = string
-  default     = "<+input>"
-}
-
-variable "experiment_target_namespace" {
-  description = "Target namespace for experiments (supports runtime input)"
-  type        = string
-  default     = "<+input>"
-}
-
-variable "experiment_custom_command" {
-  description = "Custom command for CMD probes (supports runtime input)"
-  type        = string
-  default     = "<+input>"
-}
-
-# ============================================================================
-# Experiment Variables
-# ============================================================================
-
-variable "infra_ref" {
-  description = "Infrastructure reference for chaos experiments (Kubernetes cluster ID)"
-  type        = string
-  default     = "<+input>"  # Runtime input - must be provided when running experiment
-}
-
-variable "hub_identity" {
-  description = "Identity of the custom chaos hub for experiments"
-  type        = string
-  default     = ""  # Must be provided or use chaos_hub_identity
-}
-
-variable "enterprise_hub_identity" {
-  description = "Identity of the enterprise chaos hub"
-  type        = string
-  default     = "enterprise-chaoshub"  # Default enterprise hub name
-}
-
-variable "org_id" {
-  description = "Organization ID for experiments"
-  type        = string
-  default     = "default"
-}
-
-variable "experiment_name_suffix" {
-  description = "Suffix to append to experiment names for uniqueness (e.g., timestamp or identifier)"
-  type        = string
-  default     = "test"
 }

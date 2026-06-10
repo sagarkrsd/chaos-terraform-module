@@ -1,0 +1,288 @@
+name: E2E Chaos Engineering Tests
+
+on:
+  # Run on schedule (daily at 2 AM UTC)
+  schedule:
+    - cron: '0 2 * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      run_negative_tests:
+        description: 'Run negative test scenarios'
+        required: false
+        type: boolean
+        default: false
+      enable_drift_testing:
+        description: 'Enable drift testing'
+        required: false
+        type: boolean
+        default: true
+      cleanup_on_failure:
+        description: 'Cleanup resources on test failure'
+        required: false
+        type: boolean
+        default: true
+  
+  # Run on PR to e2e-test directory
+  pull_request:
+    paths:
+      - 'e2e-test/**'
+      - '.github/workflows/e2e-chaos-tests.yml'
+
+env:
+  TF_VERSION: '1.5.0'
+  HARNESS_ENDPOINT: 'https://app.harness.io/gateway'
+
+jobs:
+  pre-flight-checks:
+    name: Pre-flight Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+      
+      - name: Run pre-flight checks
+        working-directory: e2e-test
+        env:
+          HARNESS_ACCOUNT_ID: ${{ secrets.HARNESS_ACCOUNT_ID }}
+          HARNESS_API_KEY: ${{ secrets.HARNESS_API_KEY }}
+        run: |
+          chmod +x scripts/pre-flight-check.sh
+          ./scripts/pre-flight-check.sh
+
+  terraform-validate:
+    name: Terraform Validation
+    runs-on: ubuntu-latest
+    needs: pre-flight-checks
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      
+      - name: Terraform Format Check
+        working-directory: e2e-test
+        run: terraform fmt -check -recursive
+      
+      - name: Terraform Init
+        working-directory: e2e-test
+        env:
+          HARNESS_ACCOUNT_ID: ${{ secrets.HARNESS_ACCOUNT_ID }}
+          HARNESS_API_KEY: ${{ secrets.HARNESS_API_KEY }}
+        run: terraform init -backend=false
+      
+      - name: Terraform Validate
+        working-directory: e2e-test
+        run: terraform validate
+
+  e2e-deployment:
+    name: E2E Deployment Test
+    runs-on: ubuntu-latest
+    needs: terraform-validate
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+      
+      - name: Create terraform.tfvars
+        working-directory: e2e-test
+        run: |
+          cat > terraform.tfvars <<EOF
+          # Auto-generated for CI/CD
+          org_identifier     = "chaos_e2e_ci_${{ github.run_number }}"
+          org_name           = "Chaos E2E CI ${{ github.run_number }}"
+          project_identifier = "chaos_e2e_ci_project_${{ github.run_number }}"
+          project_name       = "Chaos E2E CI Project ${{ github.run_number }}"
+          
+          delegate_selectors = ${{ secrets.DELEGATE_SELECTORS }}
+          namespace          = "chaos-e2e-ci-${{ github.run_number }}"
+          
+          run_negative_tests = ${{ github.event.inputs.run_negative_tests || 'false' }}
+          enable_drift_testing = ${{ github.event.inputs.enable_drift_testing || 'true' }}
+          EOF
+      
+      - name: Terraform Init
+        working-directory: e2e-test
+        env:
+          HARNESS_ACCOUNT_ID: ${{ secrets.HARNESS_ACCOUNT_ID }}
+          HARNESS_API_KEY: ${{ secrets.HARNESS_API_KEY }}
+        run: terraform init
+      
+      - name: Terraform Plan
+        working-directory: e2e-test
+        env:
+          HARNESS_ACCOUNT_ID: ${{ secrets.HARNESS_ACCOUNT_ID }}
+          HARNESS_API_KEY: ${{ secrets.HARNESS_API_KEY }}
+        run: terraform plan -out=tfplan
+      
+      - name: Terraform Apply
+        working-directory: e2e-test
+        env:
+          HARNESS_ACCOUNT_ID: ${{ secrets.HARNESS_ACCOUNT_ID }}
+          HARNESS_API_KEY: ${{ secrets.HARNESS_API_KEY }}
+        run: terraform apply -auto-approve tfplan
+      
+      - name: Validate Deployment
+        working-directory: e2e-test
+        env:
+          HARNESS_ACCOUNT_ID: ${{ secrets.HARNESS_ACCOUNT_ID }}
+          HARNESS_API_KEY: ${{ secrets.HARNESS_API_KEY }}
+        run: |
+          chmod +x scripts/validate-deployment.sh
+          ./scripts/validate-deployment.sh
+      
+      - name: Run Drift Tests
+        if: github.event.inputs.enable_drift_testing != 'false'
+        working-directory: e2e-test
+        env:
+          HARNESS_ACCOUNT_ID: ${{ secrets.HARNESS_ACCOUNT_ID }}
+          HARNESS_API_KEY: ${{ secrets.HARNESS_API_KEY }}
+        run: |
+          chmod +x scripts/drift-test.sh
+          ./scripts/drift-test.sh
+      
+      - name: Export Terraform Outputs
+        if: always()
+        working-directory: e2e-test
+        run: |
+          terraform output -json > outputs.json
+          cat outputs.json
+      
+      - name: Upload Terraform State
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-state-${{ github.run_number }}
+          path: e2e-test/terraform.tfstate
+          retention-days: 7
+      
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ github.run_number }}
+          path: e2e-test/outputs.json
+          retention-days: 30
+      
+      - name: Cleanup Resources
+        if: always() && (success() || github.event.inputs.cleanup_on_failure != 'false')
+        working-directory: e2e-test
+        env:
+          HARNESS_ACCOUNT_ID: ${{ secrets.HARNESS_ACCOUNT_ID }}
+          HARNESS_API_KEY: ${{ secrets.HARNESS_API_KEY }}
+        run: |
+          echo "Cleaning up resources..."
+          terraform destroy -auto-approve || echo "Cleanup failed, manual intervention may be required"
+      
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let outputs = {};
+            try {
+              outputs = JSON.parse(fs.readFileSync('e2e-test/outputs.json', 'utf8'));
+            } catch (e) {
+              outputs = { error: 'Failed to read outputs' };
+            }
+            
+            const comment = `## E2E Test Results 🧪
+            
+            **Run Number:** ${{ github.run_number }}
+            **Status:** ${{ job.status }}
+            
+            ### Summary
+            - ✅ Pre-flight checks passed
+            - ✅ Terraform validation passed
+            - ✅ Deployment completed
+            - ✅ Validation tests passed
+            ${github.event.inputs.enable_drift_testing != 'false' ? '- ✅ Drift tests passed' : ''}
+            
+            ### Resources Created
+            ${outputs.validation_summary ? `- Total validations: ${outputs.validation_summary.value.total_validations}` : ''}
+            
+            <details>
+            <summary>View Full Outputs</summary>
+            
+            \`\`\`json
+            ${JSON.stringify(outputs, null, 2)}
+            \`\`\`
+            </details>
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  notify-on-failure:
+    name: Notify on Failure
+    runs-on: ubuntu-latest
+    needs: e2e-deployment
+    if: failure()
+    
+    steps:
+      - name: Create Issue on Failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `E2E Test Failed - Run #${{ github.run_number }}`,
+              body: `## E2E Chaos Test Failure
+              
+              **Run Number:** ${{ github.run_number }}
+              **Workflow:** ${{ github.workflow }}
+              **Triggered by:** ${{ github.event_name }}
+              
+              ### Details
+              - **Run URL:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+              - **Commit:** ${{ github.sha }}
+              - **Branch:** ${{ github.ref }}
+              
+              ### Action Required
+              Please review the workflow logs and investigate the failure.
+              
+              ### Common Issues
+              1. Harness API connectivity
+              2. Delegate availability
+              3. Resource quota limits
+              4. Terraform state conflicts
+              
+              cc: @chaos-team`,
+              labels: ['e2e-test-failure', 'automated']
+            });

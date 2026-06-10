@@ -1,3 +1,7 @@
+# ============================================================================
+# Provider Configuration
+# ============================================================================
+
 variable "harness_endpoint" {
   type        = string
   description = "Harness endpoint"
