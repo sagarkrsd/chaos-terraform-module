@@ -10,7 +10,7 @@
 
 # Verify account-level hub by identity
 data "harness_chaos_hub_v2" "verify_account_hub" {
-  count = local.create_validation_tests && local.create_account_hub ? 1 : 0
+  count = local.create_validation_tests && local.account_hub_enabled ? 1 : 0
 
   depends_on = [
     harness_chaos_hub_v2.account_level
@@ -21,7 +21,7 @@ data "harness_chaos_hub_v2" "verify_account_hub" {
 
 # Verify org-level hub by identity
 data "harness_chaos_hub_v2" "verify_org_hub" {
-  count = local.create_validation_tests && local.create_org_hub ? 1 : 0
+  count = local.create_validation_tests && local.org_hub_enabled ? 1 : 0
 
   depends_on = [
     harness_chaos_hub_v2.org_level
@@ -33,7 +33,7 @@ data "harness_chaos_hub_v2" "verify_org_hub" {
 
 # Verify project-level hub by identity
 data "harness_chaos_hub_v2" "verify_project_hub" {
-  count = local.create_validation_tests && local.create_project_hub ? 1 : 0
+  count = local.create_validation_tests && local.project_hub_enabled ? 1 : 0
 
   depends_on = [
     harness_chaos_hub_v2.project_level

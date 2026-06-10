@@ -35,6 +35,17 @@ enable_org_scope_resources     = true   # Org-level resources
 enable_project_scope_resources = true   # Project-level resources
 
 # ----------------------------------------------------------------------------
+# Existing-Resource Reuse
+# ----------------------------------------------------------------------------
+# Set to true to REFERENCE an existing chaos hub (looked up by its identity)
+# instead of creating a new one. Use this when the hub already exists to avoid
+# create errors. Set per scope. NOTE: these MUST be set in terraform.tfvars
+# (this *.example file is NOT auto-loaded by Terraform).
+use_existing_account_hub = false
+use_existing_org_hub     = false
+use_existing_project_hub = false
+
+# ----------------------------------------------------------------------------
 # Test Resource Toggles
 # ----------------------------------------------------------------------------
 enable_update_tests            = true   # Update test resources

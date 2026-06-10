@@ -130,6 +130,28 @@ variable "enable_project_scope_resources" {
 }
 
 # ----------------------------------------------------------------------------
+# Existing-Resource Reuse Flags
+# ----------------------------------------------------------------------------
+
+variable "use_existing_account_hub" {
+  description = "If true, reference an existing account-level chaos hub (looked up by chaos_hub_account_identity) instead of creating a new one. Use this when an account-level hub already exists to avoid 'already exists' errors. Default false (create a new hub)."
+  type        = bool
+  default     = false
+}
+
+variable "use_existing_org_hub" {
+  description = "If true, reference an existing org-level chaos hub (looked up by chaos_hub_org_identity) instead of creating a new one. Default false (create a new hub)."
+  type        = bool
+  default     = false
+}
+
+variable "use_existing_project_hub" {
+  description = "If true, reference an existing project-level chaos hub (looked up by chaos_hub_project_identity) instead of creating a new one. Default false (create a new hub)."
+  type        = bool
+  default     = false
+}
+
+# ----------------------------------------------------------------------------
 # Computed Flags (Internal Use)
 # ----------------------------------------------------------------------------
 
@@ -138,10 +160,24 @@ locals {
   create_base_resources = true
 
   # Chaos hubs
-  create_chaos_hubs  = var.enable_chaos_hubs
-  create_account_hub = var.enable_chaos_hubs && var.enable_account_scope_resources
-  create_org_hub     = var.enable_chaos_hubs && var.enable_org_scope_resources
-  create_project_hub = var.enable_chaos_hubs && var.enable_project_scope_resources
+  create_chaos_hubs = var.enable_chaos_hubs
+
+  # Account hub: when enabled, either CREATE a new hub or REFERENCE an existing
+  # one (controlled by var.use_existing_account_hub). account_hub_enabled is
+  # true in either case and gates account-level templates/experiments.
+  account_hub_enabled      = var.enable_chaos_hubs && var.enable_account_scope_resources
+  create_account_hub       = local.account_hub_enabled && !var.use_existing_account_hub
+  use_existing_account_hub = local.account_hub_enabled && var.use_existing_account_hub
+
+  # Org hub: create a new one or reference an existing one.
+  org_hub_enabled      = var.enable_chaos_hubs && var.enable_org_scope_resources
+  create_org_hub       = local.org_hub_enabled && !var.use_existing_org_hub
+  use_existing_org_hub = local.org_hub_enabled && var.use_existing_org_hub
+
+  # Project hub: create a new one or reference an existing one.
+  project_hub_enabled      = var.enable_chaos_hubs && var.enable_project_scope_resources
+  create_project_hub       = local.project_hub_enabled && !var.use_existing_project_hub
+  use_existing_project_hub = local.project_hub_enabled && var.use_existing_project_hub
 
   # Templates (require hubs)
   create_templates            = var.enable_templates && var.enable_chaos_hubs
@@ -151,9 +187,9 @@ locals {
   create_experiment_templates = var.enable_templates && var.enable_experiment_templates && var.enable_chaos_hubs
 
   # Scope-specific templates
-  create_account_templates = local.create_templates && var.enable_account_scope_resources && local.create_account_hub
-  create_org_templates     = local.create_templates && var.enable_org_scope_resources && local.create_org_hub
-  create_project_templates = local.create_templates && var.enable_project_scope_resources && local.create_project_hub
+  create_account_templates = local.create_templates && var.enable_account_scope_resources && local.account_hub_enabled
+  create_org_templates     = local.create_templates && var.enable_org_scope_resources && local.org_hub_enabled
+  create_project_templates = local.create_templates && var.enable_project_scope_resources && local.project_hub_enabled
 
   # Experiments (require experiment templates)
   create_experiments = var.enable_experiments && local.create_experiment_templates
@@ -182,14 +218,27 @@ locals {
   # These provide safe references to resources that may or may not exist
   # Use these instead of direct resource references to avoid "Missing resource instance key" errors
 
-  # Hub references (use [0] if created, empty string if not)
-  account_hub_identity = local.create_account_hub ? harness_chaos_hub_v2.account_level[0].identity : ""
-  org_hub_identity     = local.create_org_hub ? harness_chaos_hub_v2.org_level[0].identity : ""
-  project_hub_identity = local.create_project_hub ? harness_chaos_hub_v2.project_level[0].identity : ""
+  # Hub references (use [0] if created, empty string if not). The account hub
+  # may be either created or referenced from an existing hub.
+  account_hub_identity = local.create_account_hub ? harness_chaos_hub_v2.account_level[0].identity : (
+    local.use_existing_account_hub ? data.harness_chaos_hub_v2.account_level_existing[0].identity : ""
+  )
+  org_hub_identity = local.create_org_hub ? harness_chaos_hub_v2.org_level[0].identity : (
+    local.use_existing_org_hub ? data.harness_chaos_hub_v2.org_level_existing[0].identity : ""
+  )
+  project_hub_identity = local.create_project_hub ? harness_chaos_hub_v2.project_level[0].identity : (
+    local.use_existing_project_hub ? data.harness_chaos_hub_v2.project_level_existing[0].identity : ""
+  )
 
-  account_hub_id = local.create_account_hub ? harness_chaos_hub_v2.account_level[0].id : ""
-  org_hub_id     = local.create_org_hub ? harness_chaos_hub_v2.org_level[0].id : ""
-  project_hub_id = local.create_project_hub ? harness_chaos_hub_v2.project_level[0].id : ""
+  account_hub_id = local.create_account_hub ? harness_chaos_hub_v2.account_level[0].id : (
+    local.use_existing_account_hub ? data.harness_chaos_hub_v2.account_level_existing[0].id : ""
+  )
+  org_hub_id = local.create_org_hub ? harness_chaos_hub_v2.org_level[0].id : (
+    local.use_existing_org_hub ? data.harness_chaos_hub_v2.org_level_existing[0].id : ""
+  )
+  project_hub_id = local.create_project_hub ? harness_chaos_hub_v2.project_level[0].id : (
+    local.use_existing_project_hub ? data.harness_chaos_hub_v2.project_level_existing[0].id : ""
+  )
 
   # Image registry references
   # Using test resources (one per scope)
@@ -278,9 +327,9 @@ output "feature_flags_status" {
     }
     chaos_hubs = {
       enabled     = var.enable_chaos_hubs
-      account_hub = local.create_account_hub
-      org_hub     = local.create_org_hub
-      project_hub = local.create_project_hub
+      account_hub = local.create_account_hub ? "CREATE" : (local.use_existing_account_hub ? "USE_EXISTING" : "DISABLED")
+      org_hub     = local.create_org_hub ? "CREATE" : (local.use_existing_org_hub ? "USE_EXISTING" : "DISABLED")
+      project_hub = local.create_project_hub ? "CREATE" : (local.use_existing_project_hub ? "USE_EXISTING" : "DISABLED")
     }
     templates = {
       enabled              = var.enable_templates
