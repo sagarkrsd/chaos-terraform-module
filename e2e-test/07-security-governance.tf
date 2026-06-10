@@ -8,6 +8,8 @@
 # Security Governance Condition
 # ----------------------------------------------------------------------------
 resource "harness_chaos_security_governance_condition" "this" {
+  count = local.create_security_governance ? 1 : 0
+
   depends_on = [
     harness_platform_environment.this,
     harness_platform_infrastructure.this,
@@ -41,7 +43,7 @@ resource "harness_chaos_security_governance_condition" "this" {
     content {
       infra_spec {
         operator  = var.security_governance_condition_infra_operator
-        infra_ids = ["${harness_platform_environment.this.id}/${harness_chaos_infrastructure_v2.this.id}"]
+        infra_ids = ["${harness_platform_environment.this.id}/${try(harness_chaos_infrastructure_v2.this[0].id, "")}"]
       }
 
       // Application specification (optional)
@@ -102,6 +104,8 @@ resource "harness_chaos_security_governance_condition" "this" {
 # Security Governance Rule
 # ----------------------------------------------------------------------------
 resource "harness_chaos_security_governance_rule" "this" {
+  count = local.create_security_governance ? 1 : 0
+
   depends_on = [
     harness_chaos_security_governance_condition.this
   ]
@@ -113,7 +117,7 @@ resource "harness_chaos_security_governance_rule" "this" {
   is_enabled  = var.security_governance_rule_is_enabled
 
   // Required fields
-  condition_ids  = [harness_chaos_security_governance_condition.this.id]
+  condition_ids  = [local.security_governance_condition_id]
   user_group_ids = var.security_governance_rule_user_group_ids
 
   // Time window configuration

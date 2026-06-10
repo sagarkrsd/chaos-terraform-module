@@ -57,11 +57,22 @@ e2e-test/
 ├── 08-experiments-project.tf           # Experiments from project templates
 ├── 09-experiments-org.tf               # Experiments from org templates
 ├── 10-experiments-account.tf           # Experiments from account templates
+├── 11-negative-tests.tf                # Negative test cases
+├── 12-validation-tests.tf              # Data source validation
+├── 13-preconditions.tf                 # Precondition checks
+├── 14-update-tests.tf                  # Probe template update tests
 ├── variables.tf                        # Input variables
 ├── outputs.tf                          # Output values
 ├── providers.tf                        # Provider configuration
 ├── terraform.tfvars.example            # Example variable values
-└── version.tf                          # Terraform version constraints
+├── version.tf                          # Terraform version constraints
+├── scripts/
+│   ├── test-probe-updates.sh           # Update test automation
+│   ├── drift-test.sh                   # Drift detection
+│   ├── pre-flight-check.sh             # Prerequisites check
+│   └── validate-deployment.sh          # Deployment validation
+└── docs/
+    └── UPDATE_TESTS_GUIDE.md           # Update testing guide
 ```
 
 ## Prerequisites
@@ -107,7 +118,14 @@ terraform apply tfplan
 terraform output
 ```
 
-### Step 6: Cleanup
+### Step 6: Test Updates (Optional)
+
+```bash
+# Test probe template updates
+./scripts/test-probe-updates.sh full
+```
+
+### Step 7: Cleanup
 
 ```bash
 terraform destroy
@@ -118,9 +136,24 @@ terraform destroy
 After successful deployment:
 - **3 Chaos Hubs**: Account, Org, Project levels
 - **15 Templates**: 5 at each scope (action, probe, fault, 2 experiment templates)
+- **3 Update Test Probes**: For testing template updates
 - **1 Infrastructure Stack**: Environment, platform infra, chaos infra
 - **1 Service Discovery Agent**: For application discovery
 - **2 Security Governance Resources**: Condition and rule
 - **6 Experiments**: 2 from each scope (custom + enterprise)
 
-Total: **28 Chaos Engineering Resources** + Foundation (org, project, connectors)
+Total: **31 Chaos Engineering Resources** + Foundation (org, project, connectors)
+
+## Testing Probe Template Updates
+
+The e2e-test suite includes comprehensive update tests for probe templates:
+
+```bash
+# Full e2e deployment (includes update test probes)
+terraform apply
+
+# Then test updates
+./scripts/test-probe-updates.sh full
+```
+
+See `docs/UPDATE_TESTS_GUIDE.md` for detailed instructions.

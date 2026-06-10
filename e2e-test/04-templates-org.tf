@@ -6,11 +6,13 @@
 # 1. Action Template - Org Level
 # ----------------------------------------------------------------------------
 resource "harness_chaos_action_template" "org_level" {
+  count = local.create_action_templates && var.enable_org_scope_resources ? 1 : 0
+
   depends_on = [harness_chaos_hub_v2.org_level]
 
   # Org level - org_id only
   org_id       = harness_platform_organization.this.id
-  hub_identity = harness_chaos_hub_v2.org_level.identity
+  hub_identity = local.org_hub_identity
 
   identity            = "e2e-action-org"
   name                = "E2E Action Template Org"
@@ -35,11 +37,13 @@ resource "harness_chaos_action_template" "org_level" {
 # 2. Probe Template - Org Level
 # ----------------------------------------------------------------------------
 resource "harness_chaos_probe_template" "org_level" {
+  count = local.create_probe_templates && var.enable_org_scope_resources ? 1 : 0
+
   depends_on = [harness_chaos_hub_v2.org_level]
 
   # Org level - org_id only
   org_id       = harness_platform_organization.this.id
-  hub_identity = harness_chaos_hub_v2.org_level.identity
+  hub_identity = local.org_hub_identity
 
   identity            = "e2e-probe-org"
   name                = "E2E Probe Template Org"
@@ -67,11 +71,13 @@ resource "harness_chaos_probe_template" "org_level" {
 # 3. Fault Template - Org Level
 # ----------------------------------------------------------------------------
 resource "harness_chaos_fault_template" "org_level" {
+  count = local.create_fault_templates && var.enable_org_scope_resources ? 1 : 0
+
   depends_on = [harness_chaos_hub_v2.org_level]
 
   # Org level - org_id only
   org_id       = harness_platform_organization.this.id
-  hub_identity = harness_chaos_hub_v2.org_level.identity
+  hub_identity = local.org_hub_identity
 
   identity             = "e2e-fault-org"
   name                 = "E2E Fault Template Org"
@@ -122,6 +128,8 @@ resource "harness_chaos_fault_template" "org_level" {
 # Uses custom action, probe, and fault templates from org hub
 # ----------------------------------------------------------------------------
 resource "harness_chaos_experiment_template" "org_custom" {
+  count = local.create_experiment_templates && var.enable_org_scope_resources ? 1 : 0
+
   depends_on = [
     harness_chaos_action_template.org_level,
     harness_chaos_probe_template.org_level,
@@ -130,7 +138,7 @@ resource "harness_chaos_experiment_template" "org_custom" {
 
   # Org level - org_id only
   org_id       = harness_platform_organization.this.id
-  hub_identity = harness_chaos_hub_v2.org_level.identity
+  hub_identity = local.org_hub_identity
 
   identity    = "e2e-exp-org-custom"
   name        = "E2E Experiment Template Org Custom"
@@ -142,7 +150,7 @@ resource "harness_chaos_experiment_template" "org_custom" {
 
     # Action from org hub
     actions {
-      identity               = harness_chaos_action_template.org_level.identity
+      identity               = local.action_template_org_identity
       name                   = "org-action"
       is_enterprise          = false
       continue_on_completion = false
@@ -150,7 +158,7 @@ resource "harness_chaos_experiment_template" "org_custom" {
 
     # Fault from org hub
     faults {
-      identity      = harness_chaos_fault_template.org_level.identity
+      identity      = local.fault_template_org_identity
       name          = "org-fault"
       revision      = "v1"
       is_enterprise = false
@@ -159,7 +167,7 @@ resource "harness_chaos_experiment_template" "org_custom" {
 
     # Probe from org hub
     probes {
-      identity      = harness_chaos_probe_template.org_level.identity
+      identity      = local.probe_template_org_identity
       name          = "org-probe"
       is_enterprise = false
       weightage     = 10
@@ -174,7 +182,6 @@ resource "harness_chaos_experiment_template" "org_custom" {
           name = "org-action"
         }
       }
-      end {}
     }
 
     vertices {
@@ -187,12 +194,10 @@ resource "harness_chaos_experiment_template" "org_custom" {
           name = "org-probe"
         }
       }
-      end {}
     }
 
     vertices {
       name = "v-end"
-      start {}
       end {
         faults {
           name = "org-fault"

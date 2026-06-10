@@ -6,6 +6,8 @@
 # Experiment from Account Complex Template
 # ----------------------------------------------------------------------------
 resource "harness_chaos_experiment" "from_account_reference" {
+  count = local.create_experiments && var.enable_account_scope_resources ? 1 : 0
+
   depends_on = [
     harness_chaos_experiment_template.account_complex,
     harness_chaos_infrastructure_v2.this
@@ -13,8 +15,8 @@ resource "harness_chaos_experiment" "from_account_reference" {
 
   org_id            = harness_platform_organization.this.id
   project_id        = harness_platform_project.this.id
-  template_identity = harness_chaos_experiment_template.account_complex.identity
-  hub_identity      = harness_chaos_hub_v2.account_level.identity
+  template_identity = local.exp_template_account_complex_identity
+  hub_identity      = "${local.account_hub_identity}"
   name              = "E2E-Exp-From-Account-Reference"
   infra_ref         = local.infra_ref
   import_type       = "REFERENCE"
@@ -32,6 +34,8 @@ resource "harness_chaos_experiment" "from_account_reference" {
 # Experiment from Account Complex Template
 # ----------------------------------------------------------------------------
 resource "harness_chaos_experiment" "from_account_local" {
+  count = local.create_experiments && var.enable_account_scope_resources ? 1 : 0
+
   depends_on = [
     harness_chaos_experiment_template.account_complex,
     harness_chaos_infrastructure_v2.this
@@ -39,8 +43,8 @@ resource "harness_chaos_experiment" "from_account_local" {
 
   org_id            = harness_platform_organization.this.id
   project_id        = harness_platform_project.this.id
-  template_identity = harness_chaos_experiment_template.account_complex.identity
-  hub_identity      = harness_chaos_hub_v2.account_level.identity
+  template_identity = local.exp_template_account_complex_identity
+  hub_identity      = "${local.account_hub_identity}"
   name              = "E2E-Exp-From-Account-Local"
   infra_ref         = local.infra_ref
   import_type       = "LOCAL"

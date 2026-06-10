@@ -170,7 +170,7 @@ variable "chaos_infra_tags" {
 variable "sd_installation_type" {
   description = "Service discovery installation type"
   type        = string
-  default     = "KUBERNETES"
+  default     = "CONNECTOR"
 }
 
 variable "service_discovery_agent_name" {
@@ -203,7 +203,7 @@ variable "registry_server" {
 variable "registry_account" {
   description = "Registry account/username"
   type        = string
-  default     = ""
+  default     = "harness"
 }
 
 variable "is_default_registry" {
@@ -215,7 +215,7 @@ variable "is_default_registry" {
 variable "is_override_allowed" {
   description = "Allow override of registry"
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "is_private_registry" {
@@ -227,7 +227,7 @@ variable "is_private_registry" {
 variable "registry_secret_name" {
   description = "Secret name for registry authentication"
   type        = string
-  default     = ""
+  default     = "harness-registry-secret"
 }
 
 variable "use_custom_images" {

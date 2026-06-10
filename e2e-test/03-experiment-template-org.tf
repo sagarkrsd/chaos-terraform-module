@@ -5,11 +5,13 @@
 # ============================================================================
 
 resource "harness_chaos_experiment_template" "org_complex" {
+  count = local.create_experiment_templates && var.enable_org_scope_resources ? 1 : 0
+
   depends_on = [harness_chaos_hub_v2.org_level]
 
   # Organization level - org_id only
   org_id       = harness_platform_organization.this.id
-  hub_identity = harness_chaos_hub_v2.org_level.identity
+  hub_identity = local.org_hub_identity
 
   identity    = "e2echaosexperimenttemplate-org"
   name        = "e2e-chaos-experiment-template-org"
@@ -275,10 +277,10 @@ resource "harness_chaos_experiment_template" "org_complex" {
 # Output
 output "org_complex_experiment_template_id" {
   description = "ID of the org-level complex experiment template"
-  value       = harness_chaos_experiment_template.org_complex.id
+  value       = local.exp_template_org_complex_id
 }
 
 output "org_complex_experiment_template_identity" {
   description = "Identity of the org-level complex experiment template"
-  value       = harness_chaos_experiment_template.org_complex.identity
+  value       = local.exp_template_org_complex_identity
 }

@@ -60,6 +60,8 @@ resource "harness_platform_infrastructure" "this" {
 # Step 7: Create Chaos Infrastructure V2
 # ----------------------------------------------------------------------------
 resource "harness_chaos_infrastructure_v2" "this" {
+  count = local.create_infrastructure ? 1 : 0
+
   depends_on = [
     harness_platform_infrastructure.this
   ]
@@ -76,12 +78,36 @@ resource "harness_chaos_infrastructure_v2" "this" {
   service_account = var.chaos_service_account
 
   tags = var.chaos_infra_tags
+
+  # ---------------------------------------------------------------------------
+  # Image registry WITHOUT a custom_images block.
+  #
+  # Regression coverage for the infra-v2 update 500: the backend
+  # (hce-saas pkg/imageregistry/repository.go) dereferences request.CustomImages
+  # without a nil check, so omitting custom_images previously produced
+  # "internal Server Error: error occurred while updating the infrastructure"
+  # (status 500). Because this block is added to an already-applied infra, the
+  # first re-apply exercises UpdateInfraV2 - the customer's exact scenario.
+  #
+  # is_private defaults to false so no real pull secret is required. To mirror
+  # the customer config exactly, set is_private_registry = true and point
+  # registry_secret_name at an existing secret.
+  # ---------------------------------------------------------------------------
+  image_registry {
+    registry_server  = var.registry_server
+    registry_account = var.registry_account
+    is_private       = var.is_private_registry
+    secret_name      = var.is_private_registry ? var.registry_secret_name : null
+    # No custom_images block on purpose - this is what triggered the 500.
+  }
 }
 
 # ----------------------------------------------------------------------------
 # Step 8: Create Service Discovery Agent
 # ----------------------------------------------------------------------------
 resource "harness_service_discovery_agent" "this" {
+  count = local.create_service_discovery ? 1 : 0
+
   depends_on = [
     harness_chaos_infrastructure_v2.this
   ]
@@ -103,35 +129,4 @@ resource "harness_service_discovery_agent" "this" {
 # ----------------------------------------------------------------------------
 # Step 9: Setup Chaos Image Registry (Optional)
 # ----------------------------------------------------------------------------
-resource "harness_chaos_image_registry" "project_level" {
-  count = var.setup_custom_registry ? 1 : 0
-
-  depends_on = [
-    harness_platform_project.this
-  ]
-
-  org_id     = harness_platform_organization.this.id
-  project_id = harness_platform_project.this.id
-
-  # Registry details
-  registry_server  = var.registry_server
-  registry_account = var.registry_account
-
-  # Authentication
-  is_default          = var.is_default_registry
-  is_override_allowed = var.is_override_allowed
-  is_private          = var.is_private_registry
-  secret_name         = var.registry_secret_name != "" ? var.registry_secret_name : null
-
-  # Custom images if needed
-  use_custom_images = var.use_custom_images
-  dynamic "custom_images" {
-    for_each = var.use_custom_images ? [1] : []
-    content {
-      log_watcher = var.log_watcher_image != "" ? var.log_watcher_image : null
-      ddcr        = var.ddcr_image != "" ? var.ddcr_image : null
-      ddcr_lib    = var.ddcr_lib_image != "" ? var.ddcr_lib_image : null
-      ddcr_fault  = var.ddcr_fault_image != "" ? var.ddcr_fault_image : null
-    }
-  }
-}
+# TEMPORARILY DISABLED - Testing with minimal config in test-image-registry.tf

@@ -9,12 +9,14 @@
 # ============================================================================
 
 resource "harness_chaos_experiment_template" "project_complex" {
+  count = local.create_experiment_templates && var.enable_project_scope_resources ? 1 : 0
+
   depends_on = [harness_chaos_hub_v2.project_level]
 
   # Project level
   org_id       = harness_platform_organization.this.id
   project_id   = harness_platform_project.this.id
-  hub_identity = harness_chaos_hub_v2.project_level.identity
+  hub_identity = local.project_hub_identity
 
   identity    = "e2echaosexperimenttemplate"
   name        = "e2e-chaos-experiment-template"
@@ -304,10 +306,10 @@ resource "harness_chaos_experiment_template" "project_complex" {
 # ----------------------------------------------------------------------------
 output "complex_experiment_template_id" {
   description = "ID of the complex experiment template"
-  value       = harness_chaos_experiment_template.project_complex.id
+  value       = local.exp_template_project_complex_id
 }
 
 output "complex_experiment_template_identity" {
   description = "Identity of the complex experiment template"
-  value       = harness_chaos_experiment_template.project_complex.identity
+  value       = local.exp_template_project_complex_identity
 }

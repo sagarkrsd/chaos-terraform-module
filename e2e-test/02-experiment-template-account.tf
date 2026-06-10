@@ -5,10 +5,12 @@
 # ============================================================================
 
 resource "harness_chaos_experiment_template" "account_complex" {
+  count = local.create_experiment_templates && var.enable_account_scope_resources ? 1 : 0
+
   depends_on = [harness_chaos_hub_v2.account_level]
 
   # Account level - no org_id or project_id
-  hub_identity = harness_chaos_hub_v2.account_level.identity
+  hub_identity = local.account_hub_identity
 
   identity    = "e2echaosexperimenttemplate-account"
   name        = "e2e-chaos-experiment-template-account"
@@ -274,10 +276,10 @@ resource "harness_chaos_experiment_template" "account_complex" {
 # Output
 output "account_complex_experiment_template_id" {
   description = "ID of the account-level complex experiment template"
-  value       = harness_chaos_experiment_template.account_complex.id
+  value       = local.exp_template_account_complex_id
 }
 
 output "account_complex_experiment_template_identity" {
   description = "Identity of the account-level complex experiment template"
-  value       = harness_chaos_experiment_template.account_complex.identity
+  value       = local.exp_template_account_complex_identity
 }

@@ -6,6 +6,8 @@
 # Experiment from Project Complex Template
 # ----------------------------------------------------------------------------
 resource "harness_chaos_experiment" "from_project_reference" {
+  count = local.create_experiments && var.enable_project_scope_resources ? 1 : 0
+
   depends_on = [
     harness_chaos_experiment_template.project_complex,
     harness_chaos_infrastructure_v2.this
@@ -13,10 +15,10 @@ resource "harness_chaos_experiment" "from_project_reference" {
 
   org_id            = harness_platform_organization.this.id
   project_id        = harness_platform_project.this.id
-  template_identity = harness_chaos_experiment_template.project_complex.identity
-  hub_identity      = harness_chaos_hub_v2.project_level.identity
-  hub_org_id        = harness_chaos_hub_v2.project_level.org_id
-  hub_project_id    = harness_chaos_hub_v2.project_level.project_id
+  template_identity = local.exp_template_project_complex_identity
+  hub_identity      = local.project_hub_identity
+  hub_org_id        = harness_platform_organization.this.id
+  hub_project_id    = harness_platform_project.this.id
   name              = "E2E-Exp-From-Project-Reference"
   infra_ref         = local.infra_ref
   import_type       = "REFERENCE"
@@ -34,6 +36,8 @@ resource "harness_chaos_experiment" "from_project_reference" {
 # Experiment from Project Complex Template
 # ----------------------------------------------------------------------------
 resource "harness_chaos_experiment" "from_project_local" {
+  count = local.create_experiments && var.enable_project_scope_resources ? 1 : 0
+
   depends_on = [
     harness_chaos_experiment_template.project_complex,
     harness_chaos_infrastructure_v2.this
@@ -41,10 +45,10 @@ resource "harness_chaos_experiment" "from_project_local" {
 
   org_id            = harness_platform_organization.this.id
   project_id        = harness_platform_project.this.id
-  template_identity = harness_chaos_experiment_template.project_complex.identity
-  hub_identity      = harness_chaos_hub_v2.project_level.identity
-  hub_org_id        = harness_chaos_hub_v2.project_level.org_id
-  hub_project_id    = harness_chaos_hub_v2.project_level.project_id
+  template_identity = local.exp_template_project_complex_identity
+  hub_identity      = local.project_hub_identity
+  hub_org_id        = harness_platform_organization.this.id
+  hub_project_id    = harness_platform_project.this.id
   name              = "E2E-Exp-From-Project-Local"
   infra_ref         = local.infra_ref
   import_type       = "LOCAL"

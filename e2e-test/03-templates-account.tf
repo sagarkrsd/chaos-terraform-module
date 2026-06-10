@@ -6,10 +6,12 @@
 # 1. Action Template - Account Level
 # ----------------------------------------------------------------------------
 resource "harness_chaos_action_template" "account_level" {
+  count = local.create_action_templates && var.enable_account_scope_resources ? 1 : 0
+
   depends_on = [harness_chaos_hub_v2.account_level]
 
   # Account level - no org_id or project_id
-  hub_identity = harness_chaos_hub_v2.account_level.identity
+  hub_identity = local.account_hub_identity
 
   identity            = "e2e-action-account"
   name                = "E2E Action Template Account"
@@ -35,10 +37,12 @@ resource "harness_chaos_action_template" "account_level" {
 # 2. Probe Template - Account Level
 # ----------------------------------------------------------------------------
 resource "harness_chaos_probe_template" "account_level" {
+  count = local.create_probe_templates && var.enable_account_scope_resources ? 1 : 0
+
   depends_on = [harness_chaos_hub_v2.account_level]
 
   # Account level - no org_id or project_id
-  hub_identity = harness_chaos_hub_v2.account_level.identity
+  hub_identity = local.account_hub_identity
 
   identity            = "e2e-probe-account"
   name                = "E2E Probe Template Account"
@@ -72,10 +76,12 @@ resource "harness_chaos_probe_template" "account_level" {
 # 3. Fault Template - Account Level
 # ----------------------------------------------------------------------------
 resource "harness_chaos_fault_template" "account_level" {
+  count = local.create_fault_templates && var.enable_account_scope_resources ? 1 : 0
+
   depends_on = [harness_chaos_hub_v2.account_level]
 
   # Account level - no org_id or project_id
-  hub_identity = harness_chaos_hub_v2.account_level.identity
+  hub_identity = local.account_hub_identity
 
   identity             = "e2e-fault-account"
   name                 = "E2E Fault Template Account"
@@ -126,6 +132,8 @@ resource "harness_chaos_fault_template" "account_level" {
 # Uses custom action, probe, and fault templates from account hub
 # ----------------------------------------------------------------------------
 resource "harness_chaos_experiment_template" "account_custom" {
+  count = local.create_experiment_templates && var.enable_account_scope_resources ? 1 : 0
+
   depends_on = [
     harness_chaos_action_template.account_level,
     harness_chaos_probe_template.account_level,
@@ -133,7 +141,7 @@ resource "harness_chaos_experiment_template" "account_custom" {
   ]
 
   # Account level - no org_id or project_id
-  hub_identity = harness_chaos_hub_v2.account_level.identity
+  hub_identity = local.account_hub_identity
 
   identity    = "e2e-exp-account-custom"
   name        = "E2E Experiment Template Account Custom"
@@ -145,7 +153,7 @@ resource "harness_chaos_experiment_template" "account_custom" {
 
     # Action from account hub
     actions {
-      identity              = harness_chaos_action_template.account_level.identity
+      identity              = local.action_template_account_identity
       name                  = "account-action"
       is_enterprise         = false
       continue_on_completion = false
@@ -153,7 +161,7 @@ resource "harness_chaos_experiment_template" "account_custom" {
 
     # Fault from account hub
     faults {
-      identity      = harness_chaos_fault_template.account_level.identity
+      identity      = local.fault_template_account_identity
       name          = "account-fault"
       revision      = "v1"
       is_enterprise = false
@@ -162,7 +170,7 @@ resource "harness_chaos_experiment_template" "account_custom" {
 
     # Probe from account hub
     probes {
-      identity      = harness_chaos_probe_template.account_level.identity
+      identity      = local.probe_template_account_identity
       name          = "account-probe"
       is_enterprise = false
       weightage     = 10
@@ -177,7 +185,6 @@ resource "harness_chaos_experiment_template" "account_custom" {
           name = "account-action"
         }
       }
-      end {}
     }
 
     vertices {
@@ -190,12 +197,10 @@ resource "harness_chaos_experiment_template" "account_custom" {
           name = "account-probe"
         }
       }
-      end {}
     }
 
     vertices {
       name = "v-end"
-      start {}
       end {
         faults {
           name = "account-fault"

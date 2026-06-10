@@ -6,12 +6,14 @@
 # 1. Action Template - Project Level
 # ----------------------------------------------------------------------------
 resource "harness_chaos_action_template" "project_level" {
+  count = local.create_action_templates && var.enable_project_scope_resources ? 1 : 0
+
   depends_on = [harness_chaos_hub_v2.project_level]
 
   # Project level - org_id and project_id
   org_id       = harness_platform_organization.this.id
   project_id   = harness_platform_project.this.id
-  hub_identity = harness_chaos_hub_v2.project_level.identity
+  hub_identity = local.project_hub_identity
 
   identity            = "e2e-action-project"
   name                = "E2E Action Template Project"
@@ -94,12 +96,14 @@ resource "harness_chaos_action_template" "project_level" {
 # 2. Probe Template - Project Level
 # ----------------------------------------------------------------------------
 resource "harness_chaos_probe_template" "project_level" {
+  count = local.create_probe_templates && var.enable_project_scope_resources ? 1 : 0
+
   depends_on = [harness_chaos_hub_v2.project_level]
 
   # Project level - org_id and project_id
   org_id       = harness_platform_organization.this.id
   project_id   = harness_platform_project.this.id
-  hub_identity = harness_chaos_hub_v2.project_level.identity
+  hub_identity = local.project_hub_identity
 
   identity            = "e2e-probe-project"
   name                = "E2E Probe Template Project"
@@ -128,12 +132,14 @@ resource "harness_chaos_probe_template" "project_level" {
 # 3. Fault Template - Project Level
 # ----------------------------------------------------------------------------
 resource "harness_chaos_fault_template" "project_level" {
+  count = local.create_fault_templates && var.enable_project_scope_resources ? 1 : 0
+
   depends_on = [harness_chaos_hub_v2.project_level]
 
   # Project level - org_id and project_id
   org_id       = harness_platform_organization.this.id
   project_id   = harness_platform_project.this.id
-  hub_identity = harness_chaos_hub_v2.project_level.identity
+  hub_identity = local.project_hub_identity
 
   identity             = "e2e-fault-project"
   name                 = "E2E Fault Template Project"
@@ -143,6 +149,30 @@ resource "harness_chaos_fault_template" "project_level" {
   type                 = "Custom"
   permissions_required = "Basic"
   tags                 = ["e2e", "project", "fault"]
+
+  # ---------------------------------------------------------------------------
+  # Variables block - exercises the fault_template variables import/read fix.
+  # Variables are parsed back from the stored template YAML on Read, so they
+  # must round-trip without drift (and survive `terraform import`).
+  #
+  # To validate the UPDATE-via-PUT 500 fix: after the first apply, change a
+  # value below (e.g. the CHAOS_DURATION default) or the description, then
+  # re-apply. The update must succeed (no 500) and the subsequent plan must be
+  # empty.
+  # ---------------------------------------------------------------------------
+  variables {
+    name        = "TARGET_NAMESPACE"
+    description = "Namespace to target"
+    type        = "string"
+    value       = "<+input>"
+  }
+
+  variables {
+    name        = "CHAOS_DURATION"
+    description = "Duration of chaos in seconds"
+    type        = "string"
+    value       = "<+input>.default('60')"
+  }
 
   links {
     name = "Documentation"
@@ -184,6 +214,8 @@ resource "harness_chaos_fault_template" "project_level" {
 # Uses custom action, probe, and fault templates from project hub
 # ----------------------------------------------------------------------------
 resource "harness_chaos_experiment_template" "project_custom" {
+  count = local.create_experiment_templates && var.enable_project_scope_resources ? 1 : 0
+
   depends_on = [
     harness_chaos_action_template.project_level,
     harness_chaos_probe_template.project_level,
@@ -193,7 +225,7 @@ resource "harness_chaos_experiment_template" "project_custom" {
   # Project level - org_id and project_id
   org_id       = harness_platform_organization.this.id
   project_id   = harness_platform_project.this.id
-  hub_identity = harness_chaos_hub_v2.project_level.identity
+  hub_identity = local.project_hub_identity
 
   identity    = "e2e-exp-project-custom"
   name        = "E2E Experiment Template Project Custom"
@@ -205,7 +237,7 @@ resource "harness_chaos_experiment_template" "project_custom" {
 
     # Action from project hub
     actions {
-      identity               = harness_chaos_action_template.project_level.identity
+      identity               = local.action_template_project_identity
       name                   = "project-action"
       is_enterprise          = false
       continue_on_completion = false
@@ -213,7 +245,7 @@ resource "harness_chaos_experiment_template" "project_custom" {
 
     # Fault from project hub
     faults {
-      identity      = harness_chaos_fault_template.project_level.identity
+      identity      = local.fault_template_project_identity
       name          = "project-fault"
       revision      = "v1"
       is_enterprise = false
@@ -222,7 +254,7 @@ resource "harness_chaos_experiment_template" "project_custom" {
 
     # Probe from project hub
     probes {
-      identity      = harness_chaos_probe_template.project_level.identity
+      identity      = local.probe_template_project_identity
       name          = "project-probe"
       is_enterprise = false
       weightage     = 10
@@ -237,7 +269,6 @@ resource "harness_chaos_experiment_template" "project_custom" {
           name = "project-action"
         }
       }
-      end {}
     }
 
     vertices {
@@ -250,12 +281,10 @@ resource "harness_chaos_experiment_template" "project_custom" {
           name = "project-probe"
         }
       }
-      end {}
     }
 
     vertices {
       name = "v-end"
-      start {}
       end {
         faults {
           name = "project-fault"

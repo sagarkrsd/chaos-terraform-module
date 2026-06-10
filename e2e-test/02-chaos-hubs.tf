@@ -5,7 +5,11 @@
 # ----------------------------------------------------------------------------
 # Account Level Chaos Hub
 # ----------------------------------------------------------------------------
+# NOTE: This hub must be destroyed AFTER all templates that reference it
+# Templates: action_template, probe_template, fault_template, experiment_template
 resource "harness_chaos_hub_v2" "account_level" {
+  count = local.create_account_hub ? 1 : 0
+
   # Account level - no org_id or project_id
   identity    = var.chaos_hub_account_identity
   name        = var.chaos_hub_account_name
@@ -15,13 +19,19 @@ resource "harness_chaos_hub_v2" "account_level" {
 
   lifecycle {
     ignore_changes = [tags]
+    # Prevent accidental deletion since templates depend on this
+    # Comment this out when doing terraform destroy
+    # prevent_destroy = true
   }
 }
 
 # ----------------------------------------------------------------------------
 # Org Level Chaos Hub
 # ----------------------------------------------------------------------------
+# NOTE: This hub must be destroyed AFTER all templates that reference it
 resource "harness_chaos_hub_v2" "org_level" {
+  count = local.create_org_hub ? 1 : 0
+
   depends_on = [
     harness_platform_organization.this
   ]
@@ -36,13 +46,19 @@ resource "harness_chaos_hub_v2" "org_level" {
 
   lifecycle {
     ignore_changes = [tags]
+    # Prevent accidental deletion since templates depend on this
+    # Comment this out when doing terraform destroy
+    # prevent_destroy = true
   }
 }
 
 # ----------------------------------------------------------------------------
 # Project Level Chaos Hub
 # ----------------------------------------------------------------------------
+# NOTE: This hub must be destroyed AFTER all templates that reference it
 resource "harness_chaos_hub_v2" "project_level" {
+  count = local.create_project_hub ? 1 : 0
+
   depends_on = [
     harness_platform_project.this
   ]
@@ -58,5 +74,8 @@ resource "harness_chaos_hub_v2" "project_level" {
 
   lifecycle {
     ignore_changes = [tags]
+    # Prevent accidental deletion since templates depend on this
+    # Comment this out when doing terraform destroy
+    # prevent_destroy = true
   }
 }
