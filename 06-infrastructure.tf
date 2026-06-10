@@ -120,8 +120,24 @@ resource "harness_service_discovery_agent" "this" {
   installation_type      = var.sd_installation_type
 
   config {
+    skip_secure_verify = false
+
     kubernetes {
-      namespace = var.sd_namespace
+      namespace       = var.sd_namespace
+      service_account = var.sd_service_account
+      run_as_user     = var.sd_run_as_user
+      run_as_group    = var.sd_run_as_group
+    }
+
+    data {
+      observed_namespaces      = var.sd_observed_namespaces
+      enable_node_agent        = var.sd_enable_node_agent
+      node_agent_selector      = var.sd_node_agent_selector
+      collection_window_in_min = var.sd_collection_window_in_min
+
+      cron {
+        expression = var.sd_cron_expression
+      }
     }
   }
 }

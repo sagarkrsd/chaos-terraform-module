@@ -126,7 +126,8 @@ resource "harness_chaos_security_governance_rule" "this" {
     content {
       time_zone  = time_windows.value.time_zone
       start_time = time_windows.value.start_time
-      duration   = time_windows.value.duration
+      end_time   = time_windows.value.end_time
+      // duration   = time_windows.value.duration
 
       dynamic "recurrence" {
         for_each = time_windows.value.recurrence != null ? [time_windows.value.recurrence] : []

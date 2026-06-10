@@ -185,6 +185,54 @@ variable "sd_namespace" {
   default     = "chaos-e2e"
 }
 
+variable "sd_service_account" {
+  description = "Service account for the service discovery agent (empty = default)"
+  type        = string
+  default     = ""
+}
+
+variable "sd_run_as_user" {
+  description = "UID the service discovery agent runs as"
+  type        = number
+  default     = 2000
+}
+
+variable "sd_run_as_group" {
+  description = "GID the service discovery agent runs as"
+  type        = number
+  default     = 2000
+}
+
+variable "sd_observed_namespaces" {
+  description = "Namespaces observed by the service discovery agent"
+  type        = list(string)
+  default     = ["boutique"]
+}
+
+variable "sd_enable_node_agent" {
+  description = "Whether the service discovery node agent is enabled"
+  type        = bool
+  default     = true
+}
+
+variable "sd_node_agent_selector" {
+  description = "Node selector for the service discovery node agent (empty = none)"
+  type        = string
+  default     = ""
+}
+
+variable "sd_collection_window_in_min" {
+  description = "Data collection window in minutes for service discovery"
+  type        = number
+  default     = 5
+}
+
+variable "sd_cron_expression" {
+  description = "Cron expression for service discovery data collection"
+  type        = string
+  default     = "0/15 * * * *"
+}
+
 # ----------------------------------------------------------------------------
 # Image Registry Variables (Optional)
 # ----------------------------------------------------------------------------
@@ -239,25 +287,25 @@ variable "use_custom_images" {
 variable "log_watcher_image" {
   description = "Custom image for log watcher"
   type        = string
-  default     = "docker.io/harness/chaos-log-watcher:1.72.0"
+  default     = "docker.io/harness/chaos-log-watcher:1.88.0"
 }
 
 variable "ddcr_image" {
   description = "Custom image for DDCR (Dedicated Data Collection and Reporting)"
   type        = string
-  default     = "docker.io/harness/chaos-ddcr:1.72.0"
+  default     = "docker.io/harness/chaos-ddcr:1.88.0"
 }
 
 variable "ddcr_lib_image" {
   description = "Custom image for DDCR library"
   type        = string
-  default     = "docker.io/harness/chaos-ddcr-faults:1.72.0"
+  default     = "docker.io/harness/chaos-ddcr-faults:1.88.0"
 }
 
 variable "ddcr_fault_image" {
   description = "Custom image for DDCR fault injection"
   type        = string
-  default     = "docker.io/harness/chaos-ddcr-faults:1.72.0"
+  default     = "docker.io/harness/chaos-ddcr-faults:1.88.0"
 }
 
 # ----------------------------------------------------------------------------
@@ -294,18 +342,32 @@ variable "security_governance_condition_faults" {
   default = [
     {
       fault_type = "FAULT"
-      name       = "pod-delete"
-    },
-    {
-      fault_type = "FAULT"
-      name       = "container-kill"
-    },
-    {
-      fault_type = "FAULT"
-      name       = "pod-network-loss"
+      name       = "*"
     }
   ]
 }
+
+// variable "security_governance_condition_faults" {
+//   description = "List of faults to include in the condition"
+//   type = list(object({
+//     fault_type = string
+//     name       = string
+//   }))
+//   default = [
+//     {
+//       fault_type = "FAULT"
+//       name       = "pod-delete"
+//     },
+//     {
+//       fault_type = "FAULT"
+//       name       = "container-kill"
+//     },
+//     {
+//       fault_type = "FAULT"
+//       name       = "pod-network-loss"
+//     }
+//   ]
+// }
 
 variable "security_governance_condition_infra_operator" {
   description = "Operator for the infrastructure specification"
@@ -337,9 +399,9 @@ variable "security_governance_condition_application_spec" {
       {
         namespace          = "boutique"
         kind               = "deployment"
-        label              = "app=boutique"
-        services           = ["boutique"]
-        application_map_id = "boutique-app"
+        label              = "app=adservice"
+        services           = ["adservice"]
+        application_map_id = ""
       }
     ]
   }
@@ -353,7 +415,7 @@ variable "security_governance_condition_service_account_spec" {
   })
   default = {
     operator         = "EQUAL_TO"
-    service_accounts = ["default"]
+    service_accounts = ["*"]
   }
 }
 
@@ -392,7 +454,7 @@ variable "security_governance_rule_time_windows" {
   type = list(object({
     time_zone  = string
     start_time = number
-    duration   = string
+    end_time   = number
     recurrence = object({
       type  = string
       until = number
@@ -401,11 +463,13 @@ variable "security_governance_rule_time_windows" {
   default = [
     {
       time_zone  = "UTC"
-      start_time = 1711238400000 # Default start time (March 23, 2024 00:00:00 UTC)
-      duration   = "24h"
+      start_time = 1781072073000
+      # end_time must be within one year of start_time (chaos guard rule).
+      # 1781072073000 + ~360 days (31,104,000,000 ms) = 1812176073000.
+      end_time   = 1812176073000
       recurrence = {
         type  = "Daily"
-        until = -1 # Recur indefinitely
+        until = -1
       }
     }
   ]

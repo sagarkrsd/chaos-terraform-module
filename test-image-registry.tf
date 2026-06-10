@@ -21,7 +21,7 @@
 #   # No org_id = account-level registry (highest scope)
 #
 #   registry_server  = "docker.io"
-#   registry_account = "harness-account-level"
+#   registry_account = "harness"
 #
 #   is_default          = false
 #   is_override_allowed = true  # ← CRITICAL: Allows org and project to override
@@ -42,19 +42,19 @@ resource "harness_chaos_image_registry" "test_org_level" {
   # No project_id = org-level registry
 
   registry_server  = "docker.io"
-  registry_account = "harness-org-level" # ← Overrides account value
+  registry_account = "harness" # ← Overrides account value
 
   is_default          = false
   is_override_allowed = true # ← CRITICAL: Allows project to override
   is_private          = false
-  use_custom_images   = true
+  use_custom_images   = false
 
-  custom_images {
-    log_watcher = "docker.io/harness/log-watcher:v2.0.0"
-    ddcr        = "docker.io/harness/ddcr:v2.0.0"
-    ddcr_lib    = "docker.io/harness/ddcr-lib:v2.0.0"
-    ddcr_fault  = "docker.io/harness/ddcr-fault:v2.0.0"
-  }
+  // custom_images {
+  //   log_watcher = "docker.io/harness/log-watcher:v2.0.0"
+  //   ddcr        = "docker.io/harness/ddcr:v2.0.0"
+  //   ddcr_lib    = "docker.io/harness/ddcr-lib:v2.0.0"
+  //   ddcr_fault  = "docker.io/harness/ddcr-fault:v2.0.0"
+  // }
 }
 
 # =============================================================================
@@ -69,7 +69,7 @@ resource "harness_chaos_image_registry" "test_project_level" {
   # No infra_id = project-level registry
 
   registry_server  = "docker.io"
-  registry_account = "harness-project-level" # ← Overrides org value
+  registry_account = "harness" # ← Overrides org value
 
   is_default          = false
   is_override_allowed = true
@@ -78,30 +78,48 @@ resource "harness_chaos_image_registry" "test_project_level" {
 
   # Test custom images with all fields populated
   custom_images {
-    log_watcher = "docker.io/harness/log-watcher:v3.0.0"
-    ddcr        = "docker.io/harness/ddcr:v3.0.0"
-    ddcr_lib    = "docker.io/harness/ddcr-lib:v3.0.0"
-    ddcr_fault  = "docker.io/harness/ddcr-fault:v1.0.0"
+    log_watcher = "docker.io/harness/chaos-log-watcher:1.88.0"
+    ddcr        = "docker.io/harness/chaos-ddcr:1.88.0"
+    ddcr_lib    = "docker.io/harness/chaos-ddcr-faults:1.88.0"
+    ddcr_fault  = "docker.io/harness/chaos-ddcr-faults:1.88.0"
   }
 }
 
 # =============================================================================
-# Test 4: Infra-Level Registry (if you have infra)
+# Phase 4: Infra-Level Registry (Bottom of Hierarchy, requires chaos infra)
 # =============================================================================
-# resource "harness_chaos_image_registry" "test_infra_level" {
-#   org_id     = harness_platform_organization.this.id
-#   project_id = harness_platform_project.this.id
-#   infra_id   = harness_chaos_infrastructure.test.id
-#
-#   registry_server  = "gcr.io"
-#   registry_account = "my-infra-registry"
-#   
-#   is_default          = false
-#   is_override_allowed = false
-#   is_private          = true
-#   secret_name         = "gcr-secret"
-#   use_custom_images   = false
-# }
+# Only created when chaos infrastructure exists (enable_infrastructure = true).
+# infra_id is the chaos infrastructure identifier. is_private is kept false so
+# no real pull secret is required for the e2e run; set is_private = true and
+# secret_name to an existing secret to mirror a private-registry setup.
+resource "harness_chaos_image_registry" "test_infra_level" {
+  count = local.create_infrastructure ? 1 : 0
+
+  # Explicit dependency: create AFTER project-level and the chaos infra
+  depends_on = [
+    harness_chaos_image_registry.test_project_level,
+    harness_chaos_infrastructure_v2.this,
+  ]
+
+  org_id     = harness_platform_organization.this.id
+  project_id = harness_platform_project.this.id
+  infra_id   = harness_chaos_infrastructure_v2.this[0].infra_id
+
+  registry_server  = "docker.io"
+  registry_account = "harness" # ← Overrides project value
+
+  is_default          = false
+  is_override_allowed = false
+  is_private          = false
+  use_custom_images   = true
+
+  custom_images {
+    log_watcher = "docker.io/harness/chaos-log-watcher:1.88.0"
+    ddcr        = "docker.io/harness/chaos-ddcr:1.88.0"
+    ddcr_lib    = "docker.io/harness/chaos-ddcr-faults:1.88.0"
+    ddcr_fault  = "docker.io/harness/chaos-ddcr-faults:1.88.0"
+  }
+}
 
 # =============================================================================
 # Test 4: Update Test - Change registry_account
@@ -129,6 +147,10 @@ output "project_registry_id" {
   value = harness_chaos_image_registry.test_project_level.id
 }
 
+output "infra_registry_id" {
+  value = try(harness_chaos_image_registry.test_infra_level[0].id, "")
+}
+
 # =============================================================================
 # Data Source Verification
 # =============================================================================
@@ -149,6 +171,16 @@ data "harness_chaos_image_registry" "verify_project" {
   project_id = harness_platform_project.this.id
 
   depends_on = [harness_chaos_image_registry.test_project_level]
+}
+
+data "harness_chaos_image_registry" "verify_infra" {
+  count = local.create_infrastructure ? 1 : 0
+
+  org_id     = harness_platform_organization.this.id
+  project_id = harness_platform_project.this.id
+  infra_id   = harness_chaos_infrastructure_v2.this[0].infra_id
+
+  depends_on = [harness_chaos_image_registry.test_infra_level]
 }
 
 # output "verify_account_registry_account" {

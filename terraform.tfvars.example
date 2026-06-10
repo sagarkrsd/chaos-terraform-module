@@ -129,8 +129,18 @@ chaos_infra_tags = ["e2e", "test", "kubernetes"]
 # ----------------------------------------------------------------------------
 # Service Discovery
 # ----------------------------------------------------------------------------
-sd_installation_type = "KUBERNETES"
-sd_namespace         = "chaos-e2e"
+sd_installation_type = "CONNECTOR"
+sd_namespace         = "hce"
+
+# Agent config (mirrors the servicediscovery API payload)
+sd_service_account          = ""
+sd_run_as_user              = 2000
+sd_run_as_group             = 2000
+sd_observed_namespaces      = ["boutique"]
+sd_enable_node_agent        = true
+sd_node_agent_selector      = ""
+sd_collection_window_in_min = 5
+sd_cron_expression          = "0/15 * * * *"
 
 # ----------------------------------------------------------------------------
 # Custom Image Registry (Optional)
@@ -154,20 +164,25 @@ security_governance_rule_name       = "E2E Security Rule"
 security_governance_rule_description = "Security rule for E2E chaos experiments"
 security_governance_rule_is_enabled = true
 
-# User group IDs for approval workflow (optional)
-security_governance_rule_user_group_ids = []
+# User group IDs for approval workflow.
+# IMPORTANT: must be NON-EMPTY. An empty list ([]) is sent to the API as
+# `userGroupIds: null`, which fails with 422 "cannot be null".
+# "_project_all_users" is the built-in group auto-created with every project.
+security_governance_rule_user_group_ids = ["_project_all_users"]
 
-# Time windows for chaos experiments
-# Uses default from variables.tf (24/7 access until 2025-12-31)
+# Time windows for chaos experiments.
+# NOTE: start_time, end_time and recurrence.until are epoch timestamps in
+# MILLISECONDS (numbers), NOT strings. Use `until = -1` for "no end".
+# Uses default from variables.tf if left unset.
 # Uncomment and customize if needed:
 # security_governance_rule_time_windows = [
 #   {
 #     time_zone  = "America/Los_Angeles"
-#     start_time = "2026-01-27T09:00:00"
-#     duration   = "8h"
+#     start_time = 1781072073000
+#     end_time   = 1812176073000
 #     recurrence = {
-#       type  = "DAILY"
-#       until = "2026-12-31T23:59:59"
+#       type  = "Daily"
+#       until = -1
 #     }
 #   }
 # ]
