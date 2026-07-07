@@ -336,7 +336,60 @@ resource "null_resource" "validation_checks" {
     # }
   }
 
+  # Re-validate only when a validated identity changes. Preconditions above are
+  # evaluated on every plan regardless, so this avoids a perpetual replacement
+  # diff while still re-running the checks whenever inputs change.
   triggers = {
-    always_run = timestamp()
+    account_hub    = local.account_hub_identity
+    account_action = local.action_template_account_identity
+    account_probe  = local.probe_template_account_identity
   }
+}
+
+# ----------------------------------------------------------------------------
+# Validation 7 (opt-in): Fault Template data-source round-trip
+# ----------------------------------------------------------------------------
+# Previously disabled ("mongo: no documents in result"). The recent provider
+# fault-template read/variables fix may have resolved this. Re-enabled behind
+# enable_fault_template_validation (default false) so the base run stays green
+# until confirmed on the target account.
+data "harness_chaos_fault_template" "verify_project_fault" {
+  count = local.create_fault_template_validation && var.enable_project_scope_resources ? 1 : 0
+
+  depends_on = [
+    harness_chaos_fault_template.project_level
+  ]
+
+  org_id       = harness_platform_organization.this.id
+  project_id   = harness_platform_project.this.id
+  hub_identity = local.project_hub_identity
+  identity     = local.fault_template_project_identity
+}
+
+resource "null_resource" "fault_template_validation_checks" {
+  count = local.create_fault_template_validation && var.enable_project_scope_resources ? 1 : 0
+
+  depends_on = [
+    data.harness_chaos_fault_template.verify_project_fault
+  ]
+
+  lifecycle {
+    precondition {
+      condition     = try(data.harness_chaos_fault_template.verify_project_fault[0].identity, "") == local.fault_template_project_identity
+      error_message = "Project fault template validation failed - data source identity does not match resource"
+    }
+  }
+
+  # Re-validate only when the fault template identity changes (precondition runs
+  # every plan regardless), avoiding a perpetual replacement diff.
+  triggers = {
+    project_fault = local.fault_template_project_identity
+  }
+}
+
+output "fault_template_validation_results" {
+  description = "Fault-template data-source validation (empty unless enable_fault_template_validation=true)"
+  value = local.create_fault_template_validation ? {
+    project_verified = try(data.harness_chaos_fault_template.verify_project_fault[0].identity, "") == local.fault_template_project_identity
+  } : null
 }

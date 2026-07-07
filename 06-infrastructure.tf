@@ -62,8 +62,22 @@ resource "harness_platform_infrastructure" "this" {
 resource "harness_chaos_infrastructure_v2" "this" {
   count = local.create_infrastructure ? 1 : 0
 
+  # Image-registry override chain: org -> project -> infra-v2.
+  #
+  # The inline image_registry block below is INFRA-SCOPED (applied via
+  # UpdateInfraV2). The backend rejects an infra-scoped registry unless every
+  # higher scope has is_override_allowed = true, returning:
+  #   "a higher scope is blocking infrastructure scoped image registry
+  #    creation, please enable override from org" (HTTP 500).
+  #
+  # Therefore this resource MUST be applied only after the org-level and
+  # project-level registries (both is_override_allowed = true) exist. The
+  # project registry already depends_on the org registry, so listing both here
+  # enforces the strict org -> project -> infra-v2 ordering.
   depends_on = [
-    harness_platform_infrastructure.this
+    harness_platform_infrastructure.this,
+    harness_chaos_image_registry.test_org_level,
+    harness_chaos_image_registry.test_project_level,
   ]
 
   org_id         = harness_platform_organization.this.id
@@ -77,7 +91,11 @@ resource "harness_chaos_infrastructure_v2" "this" {
   namespace       = var.namespace
   service_account = var.chaos_service_account
 
-  tags = var.chaos_infra_tags
+  # tags are toggled by the update tests (14-update-tests.tf): the second apply
+  # (update_test_phase=updated) adds a tag to exercise UpdateInfraV2. Chaos
+  # infrastructure is stateful/expensive, so it is not duplicated as a
+  # dedicated update-test resource.
+  tags = local.update_test_updated ? concat(var.chaos_infra_tags, ["update-test:updated"]) : var.chaos_infra_tags
 
   # ---------------------------------------------------------------------------
   # Image registry WITHOUT a custom_images block.
@@ -94,8 +112,15 @@ resource "harness_chaos_infrastructure_v2" "this" {
   # registry_secret_name at an existing secret.
   # ---------------------------------------------------------------------------
   image_registry {
-    registry_server  = var.registry_server
-    registry_account = var.registry_account
+    registry_server = var.registry_server
+    # registry_account MUST mirror the project-scope registry
+    # (test-image-registry.tf), because the infra-scoped registry sits at the
+    # bottom of the override chain (org -> project -> infra) and the backend
+    # reads back the resolved/inherited value. The project registry toggles to
+    # "harness-updated" on the update phase, so if this stayed hardcoded to
+    # var.registry_account ("harness") the read would always return
+    # "harness-updated" and produce a permanent harness-updated -> harness diff.
+    registry_account = local.update_test_updated ? "harness-updated" : var.registry_account
     is_private       = var.is_private_registry
     secret_name      = var.is_private_registry ? var.registry_secret_name : null
     # No custom_images block on purpose - this is what triggered the 500.

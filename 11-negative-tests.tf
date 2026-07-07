@@ -202,6 +202,96 @@ resource "harness_chaos_action_template" "duplicate_identity" {
 }
 
 # ----------------------------------------------------------------------------
+# Test 8: Fault Template with unsupported spec.chaos.auth (MUST fail)
+# ----------------------------------------------------------------------------
+# The provider hard-errors on spec.chaos.auth because it is not plumbed through
+# to the API and would be silently dropped. This asserts the guard fires.
+# Expected error: "spec.chaos.auth is not yet supported ..."
+resource "harness_chaos_fault_template" "unsupported_auth" {
+  count = var.run_negative_tests ? 1 : 0
+
+  depends_on = [harness_chaos_hub_v2.project_level]
+
+  org_id       = harness_platform_organization.this.id
+  project_id   = harness_platform_project.this.id
+  hub_identity = local.project_hub_identity
+
+  identity             = "negative-test-fault-auth"
+  name                 = "Negative Test - Fault Auth Unsupported"
+  description          = "This should fail - spec.chaos.auth is not supported"
+  category             = ["Kubernetes"]
+  infrastructures      = ["KubernetesV2"]
+  type                 = "Custom"
+  permissions_required = "Basic"
+
+  spec {
+    chaos {
+      fault_name = "byoc-injector"
+
+      # Unsupported block - provider returns an error.
+      auth {
+        redis {
+          password = "should-fail"
+        }
+      }
+
+      kubernetes {
+        image   = "chaosnative/go-runner:ci"
+        command = ["/bin/bash", "-c"]
+        args    = ["echo 'unreachable'"]
+      }
+    }
+  }
+
+  lifecycle {
+    ignore_changes = all
+  }
+}
+
+# ----------------------------------------------------------------------------
+# Test 9: Fault Template with unsupported spec.chaos.tls (MUST fail)
+# ----------------------------------------------------------------------------
+# Expected error: "spec.chaos.tls is not yet supported ..."
+resource "harness_chaos_fault_template" "unsupported_tls" {
+  count = var.run_negative_tests ? 1 : 0
+
+  depends_on = [harness_chaos_hub_v2.project_level]
+
+  org_id       = harness_platform_organization.this.id
+  project_id   = harness_platform_project.this.id
+  hub_identity = local.project_hub_identity
+
+  identity             = "negative-test-fault-tls"
+  name                 = "Negative Test - Fault TLS Unsupported"
+  description          = "This should fail - spec.chaos.tls is not supported"
+  category             = ["Kubernetes"]
+  infrastructures      = ["KubernetesV2"]
+  type                 = "Custom"
+  permissions_required = "Basic"
+
+  spec {
+    chaos {
+      fault_name = "byoc-injector"
+
+      # Unsupported block - provider returns an error.
+      tls {
+        ca_certificate = "should-fail"
+      }
+
+      kubernetes {
+        image   = "chaosnative/go-runner:ci"
+        command = ["/bin/bash", "-c"]
+        args    = ["echo 'unreachable'"]
+      }
+    }
+  }
+
+  lifecycle {
+    ignore_changes = all
+  }
+}
+
+# ----------------------------------------------------------------------------
 # Outputs for Negative Tests
 # ----------------------------------------------------------------------------
 output "negative_tests_enabled" {
@@ -215,8 +305,10 @@ output "negative_tests_summary" {
     invalid_hub_test              = length(harness_chaos_action_template.invalid_hub) > 0
     invalid_template_test         = length(harness_chaos_experiment.invalid_template) > 0
     invalid_infra_test            = length(harness_chaos_experiment.invalid_infra) > 0
+    unsupported_fault_auth_test   = length(harness_chaos_fault_template.unsupported_auth) > 0
+    unsupported_fault_tls_test    = length(harness_chaos_fault_template.unsupported_tls) > 0
     cross_scope_violation_test    = var.test_cross_scope_violations
     duplicate_identity_test       = var.test_duplicate_resources
-    total_negative_tests_expected = 3 + (var.test_cross_scope_violations ? 1 : 0) + (var.test_duplicate_resources ? 1 : 0)
+    total_negative_tests_expected = 5 + (var.test_cross_scope_violations ? 1 : 0) + (var.test_duplicate_resources ? 1 : 0)
   } : null
 }

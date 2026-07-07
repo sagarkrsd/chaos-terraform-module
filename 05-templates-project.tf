@@ -274,11 +274,16 @@ resource "harness_chaos_experiment_template" "project_custom" {
     vertices {
       name = "v-fault"
       start {
+        probes {
+          name = "project-probe"
+        }
         faults {
           name = "project-fault"
         }
-        probes {
-          name = "project-probe"
+      }
+      end {
+        actions {
+          name = "project-action"
         }
       }
     }
@@ -286,6 +291,9 @@ resource "harness_chaos_experiment_template" "project_custom" {
     vertices {
       name = "v-end"
       end {
+        probes {
+          name = "project-probe"
+        }
         faults {
           name = "project-fault"
         }

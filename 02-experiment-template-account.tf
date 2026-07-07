@@ -7,7 +7,10 @@
 resource "harness_chaos_experiment_template" "account_complex" {
   count = local.create_experiment_templates && var.enable_account_scope_resources ? 1 : 0
 
-  depends_on = [harness_chaos_hub_v2.account_level]
+  depends_on = [
+    harness_chaos_hub_v2.account_level,
+    harness_chaos_action_template.account_level,
+  ]
 
   # Account level - no org_id or project_id
   hub_identity = local.account_hub_identity
@@ -19,6 +22,15 @@ resource "harness_chaos_experiment_template" "account_complex" {
 
   spec {
     infra_type = "KubernetesV2"
+
+    # Action-template coverage lives in this NORMAL (enterprise-fault) template
+    # on purpose - see "Action-template coverage & teardown safety" in README.md.
+    actions {
+      identity               = local.action_template_account_identity
+      name                   = "account-action"
+      is_enterprise          = false
+      continue_on_completion = false
+    }
 
     # Fault 1: Pod Delete
     faults {
@@ -213,6 +225,9 @@ resource "harness_chaos_experiment_template" "account_complex" {
       name = "v-jrc"
 
       start {
+        actions {
+          name = "account-action"
+        }
         faults {
           name = "pod-delete-jpu"
         }

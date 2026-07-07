@@ -11,7 +11,10 @@
 resource "harness_chaos_experiment_template" "project_complex" {
   count = local.create_experiment_templates && var.enable_project_scope_resources ? 1 : 0
 
-  depends_on = [harness_chaos_hub_v2.project_level]
+  depends_on = [
+    harness_chaos_hub_v2.project_level,
+    harness_chaos_action_template.project_level,
+  ]
 
   # Project level
   org_id       = harness_platform_organization.this.id
@@ -25,6 +28,18 @@ resource "harness_chaos_experiment_template" "project_complex" {
 
   spec {
     infra_type = "KubernetesV2"
+
+    # ----------------------------------------------------------------------------
+    # Action: custom (non-enterprise) action template from the project hub.
+    # Action-template coverage lives in this NORMAL (enterprise-fault) template
+    # on purpose - see "Action-template coverage & teardown safety" in README.md.
+    # ----------------------------------------------------------------------------
+    actions {
+      identity               = local.action_template_project_identity
+      name                   = "project-action"
+      is_enterprise          = false
+      continue_on_completion = false
+    }
 
     # ----------------------------------------------------------------------------
     # Fault 1: Pod Delete
@@ -234,6 +249,9 @@ resource "harness_chaos_experiment_template" "project_complex" {
       name = "v-jrc"
 
       start {
+        actions {
+          name = "project-action"
+        }
         faults {
           name = "pod-delete-jpu"
         }

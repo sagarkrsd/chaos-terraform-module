@@ -70,9 +70,21 @@ live in the same module rather than a separate directory:
 | File | Flag | Default |
 |------|------|---------|
 | `11-negative-tests.tf` | `enable_negative_tests` | `false` |
-| `12-validation-tests.tf` | `enable_validation_tests` | `true` |
+| `12-validation-tests.tf` | `enable_validation_tests` (+ `enable_fault_template_validation`) | `true` (+ `false`) |
 | `13-preconditions.tf` | (always-on input assertions) | — |
 | `14-update-tests.tf` | `enable_update_tests` | `true` |
+| `15-conditions-v2-tests.tf` | `enable_conditions_v2_tests` | `true` |
+| `16-security-governance-v3.tf` (extended) | `enable_security_governance_v3_extended` | `false` |
+
+> **`15-conditions-v2-tests.tf`** exercises the experiment-template `conditions_v2`
+> (`operator` + `values`, incl. `<+input>`) and probe `enable_data_collection`
+> round-trip (the CHAOS-12144 perpetual-diff fix). Validate by applying, then
+> running `terraform plan` — it must report **No changes.**
+>
+> These features require a provider build that includes `conditions_v2`. If
+> `terraform validate` reports *"Blocks of type conditions_v2 are not expected
+> here"*, rebuild/install the provider (`make install` in
+> `terraform-provider-harness`) and re-run `terraform init -upgrade`.
 
 To run **only the example flow** (no test scaffolding), set:
 
@@ -174,6 +186,53 @@ was created.
 
 ---
 
+## Testing the Update path (two-apply workflow)
+
+The resources in `14-update-tests.tf` (plus the infra/image-registry toggles)
+exercise each chaos resource's **Update** code path without hand-editing files.
+A single variable, `update_test_phase`, switches the mutable fields between an
+`initial` and an `updated` value:
+
+| `update_test_phase` | Effect |
+|---------------------|--------|
+| `initial` (default) | Create/hold the baseline values |
+| `updated`           | Flip descriptions, tags, timeouts, durations, `is_enabled`, etc. |
+
+Because the switch is variable-driven, the flow is **two applies on the same
+state** — the first creates the baseline, the second forces in-place updates:
+
+```bash
+# 1. Baseline apply (phase defaults to "initial")
+terraform apply
+
+# 2. Update apply — exercises every resource's Update path
+export TF_VAR_update_test_phase=updated
+terraform apply
+```
+
+Prefer a single line? Pass the variable inline instead of exporting it:
+
+```bash
+terraform apply -var='update_test_phase=updated'
+```
+
+Notes:
+
+- **Do the baseline (`initial`) apply first on a fresh state.** Starting straight
+  on `updated` creates everything already-updated and never transitions through
+  the Update path, defeating the purpose of the test.
+- Once the variable is exported (or set in `terraform.tfvars`), **plain
+  `terraform plan`/`apply` keeps using that phase**, so re-runs stay a no-op
+  instead of reverting to `initial`. Unset it (or set `initial`) to test the
+  reverse transition.
+- `-var` on the CLI is **ignored when applying a saved plan file**
+  (`terraform apply tfplan`); either bake the var into the `plan -out` step or
+  use `TF_VAR_update_test_phase` / `terraform.tfvars`.
+- Check the current phase any time with
+  `terraform output update_test_phase_active`.
+
+---
+
 ## Outputs
 
 Key outputs include the organization/project/environment/infrastructure IDs,
@@ -206,6 +265,38 @@ Chaos Hubs have a teardown constraint: at least one hub must exist in a project
 until project-level resources are removed. The configuration already orders hub
 deletion (account/org hubs depend on the project hub) so `terraform destroy`
 handles this automatically.
+
+### Action-template coverage & teardown safety
+
+Action-template usage is exercised inside the **normal (complex, enterprise-fault)
+experiment templates** (`02-/03-/06-experiment-template-*.tf`) rather than inside
+an experiment template built on **custom fault templates**. This is a deliberate
+teardown-safety decision:
+
+- When an experiment is created from a template, the backend creates **instances**
+  of the referenced action/probe/fault templates.
+- **Action templates delete cleanly.** Their delete only checks whether an
+  experiment *template* still references them (`action template is used by
+  experiment template`); there is **no** "referenced by actions" instance guard.
+  On `terraform destroy` the experiment template is removed first, so the action
+  template — and its leftover action instances — never block teardown.
+- **Custom fault templates do not.** Their delete has an extra instance guard
+  (`fault template is referenced by faults`). Deleting an experiment only
+  soft-removes the experiment (not the imported fault instances), so those
+  orphaned instances block the fault template — and then the hub
+  (`hub has fault templates`) — during `terraform destroy`.
+
+Because of this asymmetry, running experiments that reference **custom fault
+templates** currently causes destroy failures until the orphaned fault instances
+are cleaned up out-of-band (the provider exposes no `harness_chaos_fault`
+resource; only the REST `DELETE /rest/faults/{identity}` API can remove them).
+Enterprise faults (`pod-delete`, `pod-network-latency`, …) do **not** create such
+instances, so the complex templates are safe to run and destroy. Keeping the
+action there gives full action-template coverage without the fault-instance
+teardown trap.
+
+> The proper long-term fix is backend-side: experiment deletion should cascade
+> and remove the imported non-enterprise fault/probe/action instances it created.
 
 ---
 

@@ -67,3 +67,20 @@ resource "harness_chaos_experiment" "from_org_local" {
     ignore_changes = [tags]
   }
 }
+
+# ----------------------------------------------------------------------------
+# NOTE: No experiment is launched from the org CUSTOM experiment template.
+# ----------------------------------------------------------------------------
+# Launching an experiment from an experiment template that references a CUSTOM
+# (non-enterprise) fault template makes the backend create a fault *instance*
+# (a `fault` doc keyed by the template's template_uid). Deleting the experiment
+# does not remove that instance, and the fault-template delete is then blocked
+# with "fault template is referenced by faults" (which in turn blocks the hub),
+# so `terraform destroy` fails. There is no `harness_chaos_fault` resource to
+# clean those instances up from Terraform.
+#
+# Action-template coverage through experiment creation is instead provided by
+# the org COMPLEX template (from_org_reference / from_org_local above): the
+# complex templates now include an `actions {}` block, and enterprise faults do
+# NOT create the blocking fault instances. See "Action-template coverage &
+# teardown safety" in README.md.

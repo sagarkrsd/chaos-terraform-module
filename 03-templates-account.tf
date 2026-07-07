@@ -190,11 +190,16 @@ resource "harness_chaos_experiment_template" "account_custom" {
     vertices {
       name = "v-fault"
       start {
+        probes {
+          name = "account-probe"
+        }
         faults {
           name = "account-fault"
         }
-        probes {
-          name = "account-probe"
+      }
+      end {
+        actions {
+          name = "account-action"
         }
       }
     }
@@ -202,6 +207,9 @@ resource "harness_chaos_experiment_template" "account_custom" {
     vertices {
       name = "v-end"
       end {
+        probes {
+          name = "account-probe"
+        }
         faults {
           name = "account-fault"
         }

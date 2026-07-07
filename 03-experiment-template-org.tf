@@ -7,7 +7,10 @@
 resource "harness_chaos_experiment_template" "org_complex" {
   count = local.create_experiment_templates && var.enable_org_scope_resources ? 1 : 0
 
-  depends_on = [harness_chaos_hub_v2.org_level]
+  depends_on = [
+    harness_chaos_hub_v2.org_level,
+    harness_chaos_action_template.org_level,
+  ]
 
   # Organization level - org_id only
   org_id       = harness_platform_organization.this.id
@@ -20,6 +23,21 @@ resource "harness_chaos_experiment_template" "org_complex" {
 
   spec {
     infra_type = "KubernetesV2"
+
+    # Action: custom (non-enterprise) action template from the org hub.
+    # Action-template coverage intentionally lives in this NORMAL
+    # (enterprise-fault) experiment template rather than in the custom
+    # experiment template - see "Action-template coverage & teardown safety"
+    # in README.md. Action templates delete cleanly even after experiments
+    # create action instances (there is no "referenced by actions" guard),
+    # whereas custom FAULT templates are blocked by a "referenced by faults"
+    # guard and cannot be destroyed until the orphaned fault instances go.
+    actions {
+      identity               = local.action_template_org_identity
+      name                   = "org-action"
+      is_enterprise          = false
+      continue_on_completion = false
+    }
 
     # Fault 1: Pod Delete
     faults {
@@ -214,6 +232,9 @@ resource "harness_chaos_experiment_template" "org_complex" {
       name = "v-jrc"
 
       start {
+        actions {
+          name = "org-action"
+        }
         faults {
           name = "pod-delete-jpu"
         }

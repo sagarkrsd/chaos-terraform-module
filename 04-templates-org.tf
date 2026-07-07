@@ -53,9 +53,14 @@ resource "harness_chaos_probe_template" "org_level" {
   tags                = ["e2e", "org", "probe"]
 
   # CMD probe
+  # NOTE: Do NOT set `source = "inline"`. At experiment-execution time the
+  # cmdProbe source is a SourceDetails object (hce-sdk/common/probe/v1/probe.go)
+  # and inline execution means source is omitted/nil. The literal string
+  # "inline" cannot be unmarshaled into v1.SourceDetails, which fails LOCAL
+  # experiment creation ("cannot unmarshal string into Go value of type
+  # v1.SourceDetails"). Omitting source runs the command inline.
   cmd_probe {
     command = "echo 'Org-level probe check'; exit 0"
-    source  = "inline"
   }
 
   # Run properties
@@ -187,11 +192,16 @@ resource "harness_chaos_experiment_template" "org_custom" {
     vertices {
       name = "v-fault"
       start {
+        probes {
+          name = "org-probe"
+        }
         faults {
           name = "org-fault"
         }
-        probes {
-          name = "org-probe"
+      }
+      end {
+        actions {
+          name = "org-action"
         }
       }
     }
@@ -199,6 +209,9 @@ resource "harness_chaos_experiment_template" "org_custom" {
     vertices {
       name = "v-end"
       end {
+        probes {
+          name = "org-probe"
+        }
         faults {
           name = "org-fault"
         }

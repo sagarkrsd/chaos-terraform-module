@@ -449,6 +449,12 @@ variable "security_governance_rule_user_group_ids" {
   default     = ["_project_all_users"]
 }
 
+variable "security_governance_v3_linux_infra_ids" {
+  description = "Infrastructure IDs used by the extended V3 machine_spec (Linux) condition. Only used when enable_security_governance_v3_extended = true; set to real Linux chaos infra IDs in your account."
+  type        = list(string)
+  default     = ["linux-infra-placeholder"]
+}
+
 variable "security_governance_rule_time_windows" {
   description = "List of time windows for the rule"
   type = list(object({
@@ -466,7 +472,7 @@ variable "security_governance_rule_time_windows" {
       start_time = 1781072073000
       # end_time must be within one year of start_time (chaos guard rule).
       # 1781072073000 + ~360 days (31,104,000,000 ms) = 1812176073000.
-      end_time   = 1812176073000
+      end_time = 1812176073000
       recurrence = {
         type  = "Daily"
         until = -1

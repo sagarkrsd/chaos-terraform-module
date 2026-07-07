@@ -68,8 +68,12 @@ resource "harness_chaos_image_registry" "test_project_level" {
   project_id = harness_platform_project.this.id
   # No infra_id = project-level registry
 
-  registry_server  = "docker.io"
-  registry_account = "harness" # ← Overrides org value
+  registry_server = "docker.io"
+  # registry_account is toggled by the update tests (14-update-tests.tf): the
+  # second apply (update_test_phase=updated) changes it to exercise the image
+  # registry UPDATE path. Image registry is a scoped singleton, so it cannot be
+  # duplicated as a dedicated update-test resource.
+  registry_account = local.update_test_updated ? "harness-updated" : "harness" # ← Overrides org value
 
   is_default          = false
   is_override_allowed = true
@@ -88,38 +92,42 @@ resource "harness_chaos_image_registry" "test_project_level" {
 # =============================================================================
 # Phase 4: Infra-Level Registry (Bottom of Hierarchy, requires chaos infra)
 # =============================================================================
-# Only created when chaos infrastructure exists (enable_infrastructure = true).
-# infra_id is the chaos infrastructure identifier. is_private is kept false so
-# no real pull secret is required for the e2e run; set is_private = true and
-# secret_name to an existing secret to mirror a private-registry setup.
-resource "harness_chaos_image_registry" "test_infra_level" {
-  count = local.create_infrastructure ? 1 : 0
-
-  # Explicit dependency: create AFTER project-level and the chaos infra
-  depends_on = [
-    harness_chaos_image_registry.test_project_level,
-    harness_chaos_infrastructure_v2.this,
-  ]
-
-  org_id     = harness_platform_organization.this.id
-  project_id = harness_platform_project.this.id
-  infra_id   = harness_chaos_infrastructure_v2.this[0].infra_id
-
-  registry_server  = "docker.io"
-  registry_account = "harness" # ← Overrides project value
-
-  is_default          = false
-  is_override_allowed = false
-  is_private          = false
-  use_custom_images   = true
-
-  custom_images {
-    log_watcher = "docker.io/harness/chaos-log-watcher:1.88.0"
-    ddcr        = "docker.io/harness/chaos-ddcr:1.88.0"
-    ddcr_lib    = "docker.io/harness/chaos-ddcr-faults:1.88.0"
-    ddcr_fault  = "docker.io/harness/chaos-ddcr-faults:1.88.0"
-  }
-}
+# The INFRA-SCOPED registry is owned by the inline image_registry {} block on
+# harness_chaos_infrastructure_v2.this (06-infrastructure.tf), which writes it
+# via UpdateInfraV2 with InfraID = <env_id>/<infra_id>.
+#
+# A standalone harness_chaos_image_registry with infra_id points at the SAME
+# backend record, so managing it here as well produced a two-owner conflict
+# (perpetual drift: the infra-v2 block and this resource kept overwriting each
+# other's custom_images). It is therefore intentionally NOT managed here.
+#
+# The org -> project -> infra-v2 override chain is enforced by:
+#   test_org_level (override=true) -> test_project_level (override=true)
+#   -> harness_chaos_infrastructure_v2.this (depends_on both; see
+#      06-infrastructure.tf).
+#
+# resource "harness_chaos_image_registry" "test_infra_level" {
+#   count = local.create_infrastructure ? 1 : 0
+#   depends_on = [
+#     harness_chaos_image_registry.test_project_level,
+#     harness_chaos_infrastructure_v2.this,
+#   ]
+#   org_id     = harness_platform_organization.this.id
+#   project_id = harness_platform_project.this.id
+#   infra_id   = harness_chaos_infrastructure_v2.this[0].infra_id
+#   registry_server     = "docker.io"
+#   registry_account    = "harness"
+#   is_default          = false
+#   is_override_allowed = false
+#   is_private          = false
+#   use_custom_images   = true
+#   custom_images {
+#     log_watcher = "docker.io/harness/chaos-log-watcher:1.88.0"
+#     ddcr        = "docker.io/harness/chaos-ddcr:1.88.0"
+#     ddcr_lib    = "docker.io/harness/chaos-ddcr-faults:1.88.0"
+#     ddcr_fault  = "docker.io/harness/chaos-ddcr-faults:1.88.0"
+#   }
+# }
 
 # =============================================================================
 # Test 4: Update Test - Change registry_account
@@ -148,7 +156,9 @@ output "project_registry_id" {
 }
 
 output "infra_registry_id" {
-  value = try(harness_chaos_image_registry.test_infra_level[0].id, "")
+  # Infra-scoped registry is owned by the infra-v2 inline image_registry block;
+  # read it back via the verify_infra data source.
+  value = try(data.harness_chaos_image_registry.verify_infra[0].id, "")
 }
 
 # =============================================================================
@@ -180,7 +190,9 @@ data "harness_chaos_image_registry" "verify_infra" {
   project_id = harness_platform_project.this.id
   infra_id   = harness_chaos_infrastructure_v2.this[0].infra_id
 
-  depends_on = [harness_chaos_image_registry.test_infra_level]
+  # The infra-scoped registry is created by the infra-v2 inline image_registry
+  # block, so verify against that resource.
+  depends_on = [harness_chaos_infrastructure_v2.this]
 }
 
 # output "verify_account_registry_account" {

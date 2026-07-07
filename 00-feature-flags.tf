@@ -95,6 +95,35 @@ variable "enable_update_tests" {
   default     = true
 }
 
+variable "update_test_phase" {
+  description = "Update-test phase driving mutable field values in 14-update-tests.tf. Set to \"initial\" for the first apply, then re-apply with \"updated\" (terraform apply -var='update_test_phase=updated') to exercise each resource's Update path without editing files. Only has an effect when enable_update_tests = true."
+  type        = string
+  default     = "initial"
+
+  validation {
+    condition     = contains(["initial", "updated"], var.update_test_phase)
+    error_message = "update_test_phase must be either \"initial\" or \"updated\"."
+  }
+}
+
+variable "enable_conditions_v2_tests" {
+  description = "Enable the conditions_v2 + enable_data_collection experiment-template drift test (15-conditions-v2-tests.tf). Requires project-scope templates (action/probe/fault) to be enabled."
+  type        = bool
+  default     = true
+}
+
+variable "enable_security_governance_v3_extended" {
+  description = "Enable extended Security Governance V3 scenarios (machine_spec / Linux, FAULT_GROUP, recurring + end_time time windows) in 16-security-governance-v3.tf. Off by default because machine_spec references Linux infra IDs that may not exist in the target account."
+  type        = bool
+  default     = true
+}
+
+variable "enable_fault_template_validation" {
+  description = "Re-enable the fault-template and experiment data-source validations in 12-validation-tests.tf. Off by default: these were disabled due to a backend read issue that the recent provider fix may have resolved - flip to true to confirm on your account."
+  type        = bool
+  default     = true
+}
+
 variable "enable_negative_tests" {
   description = "Enable negative test resources (expected to fail)"
   type        = bool
@@ -211,6 +240,28 @@ locals {
   create_update_tests     = var.enable_update_tests && local.create_probe_templates
   create_negative_tests   = var.enable_negative_tests
   create_validation_tests = var.enable_validation_tests
+
+  # True only on the second ("updated") apply of the update-test workflow.
+  # Used across 14-update-tests.tf (and the infra/image-registry toggles) to
+  # switch mutable field values so re-applying exercises the Update path.
+  update_test_updated = local.create_update_tests && var.update_test_phase == "updated"
+
+  # conditions_v2 + enable_data_collection experiment-template drift test.
+  # Needs the project-hub action/probe/fault templates it composes.
+  create_conditions_v2_tests = (
+    var.enable_conditions_v2_tests &&
+    local.create_experiment_templates &&
+    local.create_action_templates &&
+    local.create_probe_templates &&
+    local.create_fault_templates &&
+    var.enable_project_scope_resources
+  )
+
+  # Extended Security Governance V3 scenarios (machine_spec, FAULT_GROUP, recurrence/end_time).
+  create_security_governance_v3_extended = local.create_security_governance_v3 && var.enable_security_governance_v3_extended
+
+  # Fault-template + experiment data-source validation (opt-in re-enable).
+  create_fault_template_validation = local.create_validation_tests && var.enable_fault_template_validation
 
   # ----------------------------------------------------------------------------
   # Helper Locals for Safe Resource References
