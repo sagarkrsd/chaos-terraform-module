@@ -164,6 +164,57 @@ variable "chaos_infra_tags" {
   default     = ["e2e", "test", "kubernetes"]
 }
 
+variable "chaos_infra_run_as_user" {
+  description = "Security context: UID the chaos infrastructure V2 pods run as"
+  type        = number
+  default     = 1000
+}
+
+variable "chaos_infra_run_as_group" {
+  description = "Security context: GID the chaos infrastructure V2 pods run as"
+  type        = number
+  default     = 1000
+}
+
+# ----------------------------------------------------------------------------
+# Chaos Infrastructure V2 - resources & autopilot (CHAOS-12366)
+# ----------------------------------------------------------------------------
+variable "chaos_infra_autopilot_enabled" {
+  description = "Enable autopilot mode for the chaos infrastructure V2"
+  type        = bool
+  default     = true
+}
+
+variable "chaos_infra_resources_enabled" {
+  description = "Whether to set the resources (requests/limits) block on the chaos infrastructure V2"
+  type        = bool
+  default     = true
+}
+
+variable "chaos_infra_requests_cpu" {
+  description = "CPU request for the chaos infrastructure V2 pods (Kubernetes quantity string)"
+  type        = string
+  default     = "250m"
+}
+
+variable "chaos_infra_requests_memory" {
+  description = "Memory request for the chaos infrastructure V2 pods (Kubernetes quantity string)"
+  type        = string
+  default     = "256Mi"
+}
+
+variable "chaos_infra_limits_cpu" {
+  description = "CPU limit for the chaos infrastructure V2 pods (Kubernetes quantity string)"
+  type        = string
+  default     = "500m"
+}
+
+variable "chaos_infra_limits_memory" {
+  description = "Memory limit for the chaos infrastructure V2 pods (Kubernetes quantity string)"
+  type        = string
+  default     = "512Mi"
+}
+
 # ----------------------------------------------------------------------------
 # Service Discovery Variables
 # ----------------------------------------------------------------------------

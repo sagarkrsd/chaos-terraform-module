@@ -91,11 +91,34 @@ resource "harness_chaos_infrastructure_v2" "this" {
   namespace       = var.namespace
   service_account = var.chaos_service_account
 
+  # Security context: run the infrastructure pods as a specific UID/GID.
+  run_as_user  = var.chaos_infra_run_as_user
+  run_as_group = var.chaos_infra_run_as_group
+
   # tags are toggled by the update tests (14-update-tests.tf): the second apply
   # (update_test_phase=updated) adds a tag to exercise UpdateInfraV2. Chaos
   # infrastructure is stateful/expensive, so it is not duplicated as a
   # dedicated update-test resource.
   tags = local.update_test_updated ? concat(var.chaos_infra_tags, ["update-test:updated"]) : var.chaos_infra_tags
+
+  # CHAOS-12366: autopilot + pod resource requirements. Both are honored on
+  # create (RegisterInfraV2) and update (UpdateInfraV2), so they are also
+  # exercised by the update-test phase (14-update-tests.tf) alongside tags.
+  autopilot_enabled = var.chaos_infra_autopilot_enabled
+
+  dynamic "resources" {
+    for_each = var.chaos_infra_resources_enabled ? [1] : []
+    content {
+      requests {
+        cpu    = var.chaos_infra_requests_cpu
+        memory = var.chaos_infra_requests_memory
+      }
+      limits {
+        cpu    = var.chaos_infra_limits_cpu
+        memory = var.chaos_infra_limits_memory
+      }
+    }
+  }
 
   # ---------------------------------------------------------------------------
   # Image registry WITHOUT a custom_images block.

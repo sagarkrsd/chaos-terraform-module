@@ -126,6 +126,18 @@ chaos_service_account    = "litmus"
 
 chaos_infra_tags = ["e2e", "test", "kubernetes"]
 
+# Chaos Infrastructure V2 - security context (run pods as a specific UID/GID)
+chaos_infra_run_as_user  = 1000
+chaos_infra_run_as_group = 1000
+
+# Chaos Infrastructure V2 - autopilot + pod resource requirements (CHAOS-12366)
+chaos_infra_autopilot_enabled = true
+chaos_infra_resources_enabled = true
+chaos_infra_requests_cpu      = "250m"
+chaos_infra_requests_memory   = "256Mi"
+chaos_infra_limits_cpu        = "500m"
+chaos_infra_limits_memory     = "512Mi"
+
 # ----------------------------------------------------------------------------
 # Service Discovery
 # ----------------------------------------------------------------------------

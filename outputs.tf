@@ -140,6 +140,16 @@ output "infra_ref" {
   value       = local.infra_ref
 }
 
+output "chaos_infrastructure_autopilot_enabled" {
+  description = "Whether autopilot is enabled on the chaos infrastructure V2 (CHAOS-12366)"
+  value       = local.create_infrastructure ? harness_chaos_infrastructure_v2.this[0].autopilot_enabled : null
+}
+
+output "chaos_infrastructure_resources" {
+  description = "Resource requests/limits configured on the chaos infrastructure V2 (CHAOS-12366)"
+  value       = local.create_infrastructure ? harness_chaos_infrastructure_v2.this[0].resources : null
+}
+
 output "service_discovery_agent_id" {
   description = "Service discovery agent ID"
   value       = local.service_discovery_agent_id
