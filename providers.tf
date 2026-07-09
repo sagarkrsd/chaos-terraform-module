@@ -1,3 +1,7 @@
+# ============================================================================
+# Provider Configuration
+# ============================================================================
+
 variable "harness_endpoint" {
   type        = string
   description = "Harness endpoint"
@@ -15,8 +19,8 @@ variable "harness_platform_api_key" {
   sensitive   = true
 }
 
-provider "harness" {  
-  endpoint   = var.harness_endpoint
-  account_id = var.harness_account_id
-  platform_api_key    = var.harness_platform_api_key
+provider "harness" {
+  endpoint         = var.harness_endpoint
+  account_id       = var.harness_account_id
+  platform_api_key = var.harness_platform_api_key
 }

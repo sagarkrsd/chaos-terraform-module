@@ -1,0 +1,200 @@
+# ============================================================================
+# Example Terraform Variables - E2E Test Suite
+# ============================================================================
+# Copy this file to terraform.tfvars and update with your actual values
+# cp terraform.tfvars.example terraform.tfvars
+
+# ============================================================================
+# FEATURE FLAGS - Control What Resources to Create
+# ============================================================================
+# Enable/disable specific resource types for testing
+# Base resources (org, project, connectors) are ALWAYS created
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Main Feature Toggles
+# ----------------------------------------------------------------------------
+enable_chaos_hubs              = true   # Chaos hubs at all scopes
+enable_templates               = true   # All template types
+enable_action_templates        = true   # Action templates (requires hubs)
+enable_probe_templates         = true   # Probe templates (requires hubs)
+enable_fault_templates         = true   # Fault templates (requires hubs)
+enable_experiment_templates    = true   # Experiment templates (requires hubs)
+enable_experiments             = true   # Chaos experiments (requires experiment templates)
+enable_infrastructure          = true   # Chaos infrastructure v2
+enable_image_registry          = true   # Image registry configurations
+enable_service_discovery       = true   # Service discovery agent
+enable_security_governance     = true   # Security governance rules (V1 / GraphQL)
+enable_security_governance_v3  = true   # Security governance V3 (REST) + namespace_labels tests
+
+# ----------------------------------------------------------------------------
+# Scope-Level Toggles
+# ----------------------------------------------------------------------------
+enable_account_scope_resources = true   # Account-level resources
+enable_org_scope_resources     = true   # Org-level resources
+enable_project_scope_resources = true   # Project-level resources
+
+# ----------------------------------------------------------------------------
+# Existing-Resource Reuse
+# ----------------------------------------------------------------------------
+# Set to true to REFERENCE an existing chaos hub (looked up by its identity)
+# instead of creating a new one. Use this when the hub already exists to avoid
+# create errors. Set per scope. NOTE: these MUST be set in terraform.tfvars
+# (this *.example file is NOT auto-loaded by Terraform).
+use_existing_account_hub = false
+use_existing_org_hub     = false
+use_existing_project_hub = false
+
+# ----------------------------------------------------------------------------
+# Test Resource Toggles
+# ----------------------------------------------------------------------------
+enable_update_tests            = true   # Update test resources
+enable_negative_tests          = false  # Negative test resources (expected to fail)
+enable_validation_tests        = true   # Validation test resources
+
+# ============================================================================
+# QUICK PRESETS (Uncomment one to use)
+# ============================================================================
+
+# Preset 1: Full E2E Test (default - all enabled)
+# All flags above set to true
+
+# Preset 2: Minimal Test (only base + hubs)
+# enable_chaos_hubs = true
+# enable_templates = false
+# enable_experiments = false
+# enable_infrastructure = true
+# enable_image_registry = false
+# enable_service_discovery = false
+# enable_security_governance = false
+
+# Preset 3: Templates Only (hubs + templates, no experiments)
+# enable_chaos_hubs = true
+# enable_templates = true
+# enable_experiments = false
+# enable_infrastructure = true
+
+# Preset 4: Project Scope Only (skip account/org resources)
+# enable_account_scope_resources = false
+# enable_org_scope_resources = false
+# enable_project_scope_resources = true
+
+# ============================================================================
+# RESOURCE CONFIGURATION
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Foundation (ALWAYS CREATED)
+# ----------------------------------------------------------------------------
+org_identifier     = "chaos_e2e_test_org"
+org_name           = "Chaos E2E Test Org"
+project_identifier = "chaos_e2e_test_project"
+project_name       = "Chaos E2E Test Project"
+project_color      = "#0063F7"
+
+# ----------------------------------------------------------------------------
+# Kubernetes Configuration
+# ----------------------------------------------------------------------------
+k8s_connector_identifier = "chaos_e2e_k8s_connector"
+k8s_connector_name       = "Chaos E2E K8s Connector"
+delegate_selectors       = ["chaos-tf-prod1-delegate"]
+namespace                = "hce"
+
+# ----------------------------------------------------------------------------
+# Chaos Hubs
+# ----------------------------------------------------------------------------
+chaos_hub_account_identity = "e2e_chaos_hub_account"
+chaos_hub_account_name     = "E2E Chaos Hub Account"
+chaos_hub_org_identity     = "e2e_chaos_hub_org"
+chaos_hub_org_name         = "E2E Chaos Hub Org"
+chaos_hub_project_identity = "e2e_chaos_hub_project"
+chaos_hub_project_name     = "E2E Chaos Hub Project"
+
+chaos_hub_tags = ["e2e", "test", "chaos-hub"]
+
+# ----------------------------------------------------------------------------
+# Infrastructure
+# ----------------------------------------------------------------------------
+environment_identifier    = "chaos_e2e_env"
+environment_name          = "Chaos E2E Environment"
+infrastructure_identifier = "chaos_e2e_infra"
+infrastructure_name       = "Chaos E2E Infrastructure"
+deployment_type           = "Kubernetes"
+
+chaos_infra_name         = "Chaos E2E Infrastructure V2"
+chaos_service_account    = "litmus"
+
+chaos_infra_tags = ["e2e", "test", "kubernetes"]
+
+# Chaos Infrastructure V2 - security context (run pods as a specific UID/GID)
+chaos_infra_run_as_user  = 1000
+chaos_infra_run_as_group = 1000
+
+# Chaos Infrastructure V2 - autopilot + pod resource requirements (CHAOS-12366)
+chaos_infra_autopilot_enabled = true
+chaos_infra_resources_enabled = true
+chaos_infra_requests_cpu      = "250m"
+chaos_infra_requests_memory   = "256Mi"
+chaos_infra_limits_cpu        = "500m"
+chaos_infra_limits_memory     = "512Mi"
+
+# ----------------------------------------------------------------------------
+# Service Discovery
+# ----------------------------------------------------------------------------
+sd_installation_type = "CONNECTOR"
+sd_namespace         = "hce"
+
+# Agent config (mirrors the servicediscovery API payload)
+sd_service_account          = ""
+sd_run_as_user              = 2000
+sd_run_as_group             = 2000
+sd_observed_namespaces      = ["boutique"]
+sd_enable_node_agent        = true
+sd_node_agent_selector      = ""
+sd_collection_window_in_min = 5
+sd_cron_expression          = "0/15 * * * *"
+
+# ----------------------------------------------------------------------------
+# Custom Image Registry (Optional)
+# ----------------------------------------------------------------------------
+setup_custom_registry = false
+
+# If using custom registry, uncomment and configure:
+# registry_server              = "your-registry.io"
+# registry_account             = "your-account"
+# log_watcher_image           = ""
+# ddcr_image           = ""
+# ddcr_lib_image           = ""
+# ddcr_fault_image           = ""
+# use_custom_images = false
+
+# ----------------------------------------------------------------------------
+# Security Governance
+# ----------------------------------------------------------------------------
+security_governance_condition_name  = "E2E Security Condition"
+security_governance_rule_name       = "E2E Security Rule"
+security_governance_rule_description = "Security rule for E2E chaos experiments"
+security_governance_rule_is_enabled = true
+
+# User group IDs for approval workflow.
+# IMPORTANT: must be NON-EMPTY. An empty list ([]) is sent to the API as
+# `userGroupIds: null`, which fails with 422 "cannot be null".
+# "_project_all_users" is the built-in group auto-created with every project.
+security_governance_rule_user_group_ids = ["_project_all_users"]
+
+# Time windows for chaos experiments.
+# NOTE: start_time, end_time and recurrence.until are epoch timestamps in
+# MILLISECONDS (numbers), NOT strings. Use `until = -1` for "no end".
+# Uses default from variables.tf if left unset.
+# Uncomment and customize if needed:
+# security_governance_rule_time_windows = [
+#   {
+#     time_zone  = "America/Los_Angeles"
+#     start_time = 1781072073000
+#     end_time   = 1812176073000
+#     recurrence = {
+#       type  = "Daily"
+#       until = -1
+#     }
+#   }
+# ]
